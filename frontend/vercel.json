@@ -7,8 +7,8 @@
       "destination": "/blog/post"
     },
     {
-      "source": "/case-studies/:slug(.*)",
-      "destination": "/case-studies/post"
+      "source": "/case-studies/:slug((?!index).*)",
+      "destination": "/case-studies/template"
     }
   ]
 }
