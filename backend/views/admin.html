@@ -3,368 +3,875 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FDZ Velora — Blog Admin</title>
+<title>FDZ Velora — Admin</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Reset ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #0a0a0a;
-    color: #e5e5e5;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
+/* ── Tokens ─────────────────────────────────────────────────────────────────── */
+:root {
+  --bg:        #0a0a0a;
+  --surface:   #111111;
+  --surface2:  #1a1a1a;
+  --border:    #262626;
+  --accent:    #fe3f01;
+  --text:      #e5e5e5;
+  --muted:     #737373;
+  --muted2:    #525252;
+  --green:     #4ade80;
+  --green-bg:  #052e16;
+  --green-bd:  #166534;
+  --red:       #f87171;
+  --red-bg:    #2d0a0a;
+  --red-bd:    #7f1d1d;
+  --yellow:    #facc15;
+  --yellow-bg: #1c1a05;
+  --yellow-bd: #854d0e;
+  --sidebar-w: 220px;
+}
 
-  .card {
-    background: #141414;
-    border: 1px solid #262626;
-    border-radius: 12px;
-    padding: 40px;
-    width: 100%;
-    max-width: 640px;
-  }
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
 
-  .logo {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #fe3f01;
-    margin-bottom: 8px;
-  }
+/* Login */
+#login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px;
+}
+.login-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 40px; width: 100%; max-width: 400px;
+}
 
-  h1 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 32px;
-  }
+/* App shell */
+#app-shell { display: none; height: 100vh; }
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w); background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 24px 0;
+}
+.sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+.sidebar-logo .brand { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.sidebar-logo .site  { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 2px; }
+nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--muted);
+  border: none; background: none; width: 100%; text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--surface2); color: var(--text); }
+.nav-item .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border); flex-shrink: 0;
+}
+.nav-item.active .dot { background: var(--accent); }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+.logout-btn {
+  font-size: 12px; color: var(--muted2); cursor: pointer;
+  border: none; background: none; padding: 0; font-family: inherit;
+}
+.logout-btn:hover { color: var(--text); }
 
-  .field { margin-bottom: 20px; }
+.main-content {
+  margin-left: var(--sidebar-w);
+  height: 100vh; overflow-y: auto;
+  padding: 32px 40px;
+}
 
-  label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: #737373;
-    margin-bottom: 8px;
-  }
+/* ── Sections ────────────────────────────────────────────────────────────────── */
+.section { display: none; max-width: 960px; }
+.section.active { display: block; }
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px;
+}
+.section-header h1 { font-size: 20px; font-weight: 700; }
 
-  input, textarea {
-    width: 100%;
-    background: #0a0a0a;
-    border: 1px solid #262626;
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 14px;
-    color: #e5e5e5;
-    font-family: inherit;
-    transition: border-color 0.15s;
-    outline: none;
-    resize: vertical;
-  }
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 8px; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: none;
+  transition: opacity 0.15s, background 0.15s;
+  font-family: inherit;
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary   { background: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { opacity: 0.88; }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover:not(:disabled) { background: var(--border); }
+.btn-danger    { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+.btn-danger:hover:not(:disabled) { opacity: 0.8; }
+.btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 6px; }
 
-  input:focus, textarea:focus { border-color: #fe3f01; }
+/* ── Form panel ──────────────────────────────────────────────────────────────── */
+.form-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px; margin-bottom: 32px;
+  display: none;
+}
+.form-panel.visible { display: block; }
+.form-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.form-panel-header h2 { font-size: 15px; font-weight: 700; }
+.form-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted2);
+  margin: 22px 0 14px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.field .hint { font-size: 11px; color: var(--muted2); margin-top: 4px; }
+input[type="text"], input[type="url"], input[type="number"],
+input[type="password"], textarea {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; font-size: 13px;
+  color: var(--text); font-family: inherit; outline: none;
+  transition: border-color 0.15s; resize: vertical;
+}
+input:focus, textarea:focus { border-color: var(--accent); }
+textarea { min-height: 100px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.form-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
 
-  textarea { min-height: 180px; }
+/* Image preview */
+.img-preview {
+  margin-top: 8px; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--border); display: none; height: 140px;
+}
+.img-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-  .hint {
-    font-size: 11px;
-    color: #525252;
-    margin-top: 5px;
-  }
+/* Tag chip input */
+.tag-input-wrapper {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px; min-height: 42px;
+  align-items: center; cursor: text; transition: border-color 0.15s;
+}
+.tag-input-wrapper:focus-within { border-color: var(--accent); }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 8px; font-size: 12px; color: var(--text);
+}
+.tag-chip button {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 14px; line-height: 1; padding: 0;
+  display: flex; align-items: center;
+}
+.tag-chip button:hover { color: var(--red); }
+.tag-text-input {
+  flex: 1; min-width: 80px; background: none; border: none;
+  outline: none; font-size: 13px; color: var(--text);
+  font-family: inherit; padding: 2px 0;
+}
 
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* ── Table ────────────────────────────────────────────────────────────────────── */
+.table-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+}
+.table-empty { padding: 40px; text-align: center; color: var(--muted2); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  text-align: left; padding: 11px 16px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted2);
+  border-bottom: 1px solid var(--border); background: var(--surface2);
+}
+td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.015); }
+.td-actions { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+.cell-title { font-weight: 500; }
+.cell-meta  { color: var(--muted); font-size: 12px; }
 
-  button {
-    width: 100%;
-    padding: 14px;
-    background: #fe3f01;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: opacity 0.15s;
-  }
+/* ── Badges ──────────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.badge-published { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.badge-draft     { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-bd); }
+.badge-static    { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+.badge-mongo     { background: #0a1628; color: #60a5fa; border: 1px solid #1e3a5f; }
 
-  button:hover { opacity: 0.88; }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
+/* ── Messages ────────────────────────────────────────────────────────────────── */
+.msg { padding: 11px 14px; border-radius: 8px; font-size: 13px; margin-top: 12px; display: none; }
+.msg.success { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.msg.error   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-bd); }
+.msg.show    { display: block; }
 
-  .msg {
-    margin-top: 16px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    display: none;
-  }
-
-  .msg.success { background: #052e16; color: #4ade80; border: 1px solid #166534; }
-  .msg.error   { background: #2d0a0a; color: #f87171; border: 1px solid #7f1d1d; }
-
-  /* Login screen */
-  #login-screen { display: block; }
-  #editor-screen { display: none; }
-
-  .logout {
-    font-size: 12px;
-    color: #525252;
-    cursor: pointer;
-    float: right;
-    margin-top: 4px;
-  }
-  .logout:hover { color: #e5e5e5; }
-
-  /* Posts list */
-  .posts-section { margin-top: 40px; border-top: 1px solid #262626; padding-top: 32px; }
-  .posts-section h2 { font-size: 15px; color: #737373; margin-bottom: 16px; }
-  .post-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px solid #1a1a1a;
-    font-size: 14px;
-  }
-  .post-item span { color: #a3a3a3; }
-  .del-btn {
-    width: auto;
-    padding: 6px 12px;
-    font-size: 12px;
-    background: #1a1a1a;
-    border: 1px solid #262626;
-    border-radius: 6px;
-    color: #f87171;
-    margin-top: 0;
-  }
-  .del-btn:hover { background: #2d0a0a; opacity: 1; }
-  #posts-list .empty { color: #525252; font-size: 13px; }
+/* Login card extras */
+.login-card .brand { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.login-card h1 { font-size: 20px; font-weight: 700; margin-bottom: 28px; }
 </style>
 </head>
 <body>
 
-<!-- Login -->
-<div class="card" id="login-screen">
-  <div class="logo">FDZ Velora</div>
-  <h1>Blog Admin</h1>
-  <div class="field">
-    <label>Admin Password</label>
-    <input type="password" id="pw-input" placeholder="Enter password" autocomplete="current-password">
+<!-- ── Login ───────────────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="brand">FDZ Velora</div>
+    <h1>Admin Panel</h1>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="pw-input" placeholder="Enter admin password" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" id="login-btn" style="width:100%;justify-content:center;padding:12px;">Sign In</button>
+    <div class="msg" id="login-msg"></div>
   </div>
-  <button id="login-btn">Sign In</button>
-  <div class="msg" id="login-msg"></div>
 </div>
 
-<!-- Editor -->
-<div class="card" id="editor-screen">
-  <div class="logo">FDZ Velora <span class="logout" id="logout-btn">Sign out</span></div>
-  <h1>New Blog Post</h1>
+<!-- ── App shell ────────────────────────────────────────────────────────────── -->
+<div id="app-shell">
 
-  <div class="field">
-    <label>Title *</label>
-    <input type="text" id="f-title" placeholder="How to Build a Brand That Lasts">
-  </div>
-
-  <div class="field">
-    <label>Slug *</label>
-    <input type="text" id="f-slug" placeholder="how-to-build-a-brand-that-lasts">
-    <div class="hint">Auto-generated from title. URL: /blog/your-slug</div>
-  </div>
-
-  <div class="field">
-    <label>Excerpt</label>
-    <input type="text" id="f-excerpt" placeholder="A short summary shown on the blog listing page">
-  </div>
-
-  <div class="field">
-    <label>Cover Image URL</label>
-    <input type="url" id="f-cover" placeholder="https://...">
-  </div>
-
-  <div class="field">
-    <label>Content *</label>
-    <textarea id="f-content" placeholder="Write your blog post here..."></textarea>
-    <div class="hint">Plain text or basic HTML accepted.</div>
-  </div>
-
-  <div class="row">
-    <div class="field">
-      <label>SEO Title</label>
-      <input type="text" id="f-seo-title" placeholder="Optional SEO title">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">FDZ Velora</div>
+      <div class="site">Admin Panel</div>
     </div>
-    <div class="field">
-      <label>SEO Description</label>
-      <input type="text" id="f-seo-desc" placeholder="Optional meta description">
+    <nav>
+      <button class="nav-item active" data-section="blog">
+        <span class="dot"></span>Blog Posts
+      </button>
+      <button class="nav-item" data-section="cs">
+        <span class="dot"></span>Case Studies
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" id="logout-btn">Sign out</button>
     </div>
-  </div>
+  </aside>
 
-  <button id="publish-btn">Publish Post</button>
-  <div class="msg" id="editor-msg"></div>
+  <div class="main-content">
 
-  <div class="posts-section">
-    <h2>Published posts (MongoDB)</h2>
-    <div id="posts-list"><span class="empty">Loading...</span></div>
+    <!-- ══ BLOG ══════════════════════════════════════════════════════════════ -->
+    <div id="section-blog" class="section active">
+      <div class="section-header">
+        <h1>Blog Posts</h1>
+        <button class="btn btn-primary" id="blog-new-btn">+ New Post</button>
+      </div>
+
+      <div class="form-panel" id="blog-form-panel">
+        <div class="form-panel-header">
+          <h2 id="blog-form-heading">New Blog Post</h2>
+          <button class="btn btn-secondary btn-sm" id="blog-cancel-btn">Cancel</button>
+        </div>
+
+        <div class="field">
+          <label>Title *</label>
+          <input type="text" id="b-title" placeholder="How to Build a Brand That Lasts">
+        </div>
+        <div class="field">
+          <label>Slug *</label>
+          <input type="text" id="b-slug" placeholder="how-to-build-a-brand-that-lasts">
+          <div class="hint">URL: /blog/your-slug</div>
+        </div>
+        <div class="field">
+          <label>Excerpt</label>
+          <input type="text" id="b-excerpt" placeholder="Short summary shown on the listing page">
+        </div>
+        <div class="field">
+          <label>Cover Image URL</label>
+          <input type="url" id="b-cover" placeholder="https://...">
+          <div class="img-preview" id="b-cover-preview"><img alt=""></div>
+        </div>
+        <div class="field">
+          <label>Content *</label>
+          <textarea id="b-content" style="min-height:180px;" placeholder="Write your post here...&#10;&#10;## Heading&#10;&#10;Plain text or basic HTML accepted."></textarea>
+        </div>
+        <div class="form-section-label">SEO (optional)</div>
+        <div class="row-2">
+          <div class="field">
+            <label>SEO Title</label>
+            <input type="text" id="b-seo-title" placeholder="Overrides page title">
+          </div>
+          <div class="field">
+            <label>SEO Description</label>
+            <input type="text" id="b-seo-desc" placeholder="Overrides meta description">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="b-publish-btn">Publish</button>
+          <button class="btn btn-secondary" id="b-draft-btn">Save as Draft</button>
+        </div>
+        <div class="msg" id="blog-msg"></div>
+        <input type="hidden" id="b-editing-slug">
+      </div>
+
+      <div class="table-wrap" id="blog-table"></div>
+    </div>
+
+    <!-- ══ CASE STUDIES ══════════════════════════════════════════════════════ -->
+    <div id="section-cs" class="section">
+      <div class="section-header">
+        <h1>Case Studies</h1>
+        <button class="btn btn-primary" id="cs-new-btn">+ New Case Study</button>
+      </div>
+
+      <div class="form-panel" id="cs-form-panel">
+        <div class="form-panel-header">
+          <h2 id="cs-form-heading">New Case Study</h2>
+          <button class="btn btn-secondary btn-sm" id="cs-cancel-btn">Cancel</button>
+        </div>
+
+        <div class="form-section-label">Identity</div>
+        <div class="field">
+          <label>Title *</label>
+          <input type="text" id="cs-title" placeholder="Nexlify SaaS">
+        </div>
+        <div class="field">
+          <label>Slug *</label>
+          <input type="text" id="cs-slug" placeholder="nexlify-saas">
+          <div class="hint">URL: /case-studies/your-slug</div>
+        </div>
+        <div class="field">
+          <label>Subtitle *</label>
+          <input type="text" id="cs-subtitle" placeholder="One-sentence description of the project">
+        </div>
+
+        <div class="form-section-label">Project Details</div>
+        <div class="row-3">
+          <div class="field">
+            <label>Industry *</label>
+            <input type="text" id="cs-industry" placeholder="SaaS">
+          </div>
+          <div class="field">
+            <label>Timeline *</label>
+            <input type="text" id="cs-timeline" placeholder="10 Weeks">
+          </div>
+          <div class="field">
+            <label>Year *</label>
+            <input type="number" id="cs-year" placeholder="2024" min="2000" max="2100">
+          </div>
+        </div>
+        <div class="field">
+          <label>Scope of Work * <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">press Enter or comma to add a tag</span></label>
+          <div class="tag-input-wrapper" id="scope-wrapper">
+            <input class="tag-text-input" id="scope-text" placeholder="e.g. Paid Advertising">
+          </div>
+        </div>
+        <div class="field">
+          <label>Live Preview URL</label>
+          <input type="url" id="cs-live-url" placeholder="https://client-website.com">
+        </div>
+
+        <div class="form-section-label">Results</div>
+        <div class="row-2">
+          <div class="field"><label>Stat 1 Value *</label><input type="text" id="cs-s1v" placeholder="+185%"></div>
+          <div class="field"><label>Stat 1 Label *</label><input type="text" id="cs-s1l" placeholder="Qualified Leads"></div>
+        </div>
+        <div class="row-2">
+          <div class="field"><label>Stat 2 Value *</label><input type="text" id="cs-s2v" placeholder="+78%"></div>
+          <div class="field"><label>Stat 2 Label *</label><input type="text" id="cs-s2l" placeholder="Demo Bookings"></div>
+        </div>
+        <div class="field">
+          <label>Challenge *</label>
+          <textarea id="cs-challenge" placeholder="Describe the client's main challenge…"></textarea>
+        </div>
+        <div class="field">
+          <label>Strategy *</label>
+          <textarea id="cs-strategy" placeholder="Describe the approach taken…"></textarea>
+        </div>
+
+        <div class="form-section-label">Media &amp; SEO</div>
+        <div class="row-2">
+          <div class="field">
+            <label>Cover Image URL</label>
+            <input type="url" id="cs-cover" placeholder="https://...">
+            <div class="img-preview" id="cs-cover-preview"><img alt=""></div>
+          </div>
+          <div class="field">
+            <label>Body Image URL</label>
+            <input type="url" id="cs-body-img" placeholder="https://...">
+            <div class="img-preview" id="cs-body-preview"><img alt=""></div>
+          </div>
+        </div>
+        <div class="row-2">
+          <div class="field"><label>SEO Title</label><input type="text" id="cs-seo-title" placeholder="Overrides page title"></div>
+          <div class="field"><label>SEO Description</label><input type="text" id="cs-seo-desc" placeholder="Overrides meta description"></div>
+        </div>
+        <div class="field" style="max-width:200px;">
+          <label>Display Order</label>
+          <input type="number" id="cs-order" placeholder="1" min="1">
+          <div class="hint">Lower = appears first in listings.</div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="cs-publish-btn">Publish</button>
+          <button class="btn btn-secondary" id="cs-draft-btn">Save as Draft</button>
+        </div>
+        <div class="msg" id="cs-msg"></div>
+        <input type="hidden" id="cs-editing-slug">
+      </div>
+
+      <div class="table-wrap" id="cs-table"></div>
+    </div>
+
   </div>
 </div>
 
 <script>
 (function () {
-  var API = window.location.origin + '/admin';
-  var pw  = '';
+  'use strict';
 
-  var loginScreen  = document.getElementById('login-screen');
-  var editorScreen = document.getElementById('editor-screen');
-  var loginMsg     = document.getElementById('login-msg');
-  var editorMsg    = document.getElementById('editor-msg');
+  var ORIGIN   = window.location.origin;
+  var BLOG_API = ORIGIN + '/admin/posts';
+  var CS_API   = ORIGIN + '/api/case-studies';
+  var pw = '';
 
-  function showMsg(el, text, type) {
+  // ── Tiny helpers ──────────────────────────────────────────────────────────────
+
+  function $(id) { return document.getElementById(id); }
+
+  function showMsg(id, text, type) {
+    var el = $(id);
     el.textContent = text;
-    el.className   = 'msg ' + type;
-    el.style.display = 'block';
+    el.className = 'msg ' + type + ' show';
+  }
+  function hideMsg(id) { $(id).className = 'msg'; }
+
+  function slugify(s) {
+    return s.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
   }
 
-  function hideMsg(el) { el.style.display = 'none'; }
+  function authHdr() {
+    return { 'Content-Type': 'application/json', 'x-admin-password': pw };
+  }
 
-  // ── Auto-slug from title ──────────────────────────────────────────────────
-  document.getElementById('f-title').addEventListener('input', function () {
-    var slug = this.value.toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-');
-    document.getElementById('f-slug').value = slug;
-  });
+  function esc(s) {
+    return String(s || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
-  // ── Login ─────────────────────────────────────────────────────────────────
-  document.getElementById('pw-input').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') document.getElementById('login-btn').click();
-  });
+  function badgeStatus(s) {
+    return '<span class="badge badge-' + s + '">' + s + '</span>';
+  }
+  function badgeSource(s) {
+    return '<span class="badge badge-' + s + '">' + s + '</span>';
+  }
 
-  document.getElementById('login-btn').addEventListener('click', function () {
-    var val = document.getElementById('pw-input').value.trim();
-    if (!val) { showMsg(loginMsg, 'Enter your password', 'error'); return; }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); }
+    catch(e) { return '—'; }
+  }
 
-    this.disabled = true;
-    fetch(API + '/posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': val },
-      body: JSON.stringify({ title: '__test__', slug: '__test__', content: '__test__' }),
-    }).then(function (res) {
-      document.getElementById('login-btn').disabled = false;
-      // 409 = wrong data but auth passed; 401 = wrong password
-      if (res.status === 401) { showMsg(loginMsg, 'Incorrect password', 'error'); return; }
-      pw = val;
-      loginScreen.style.display  = 'none';
-      editorScreen.style.display = 'block';
-      loadPosts();
-    }).catch(function () {
-      document.getElementById('login-btn').disabled = false;
-      showMsg(loginMsg, 'Could not connect to server', 'error');
+  // ── Image URL preview ─────────────────────────────────────────────────────────
+
+  function bindImgPreview(inputId, previewId) {
+    $(inputId).addEventListener('input', function () {
+      var wrap = $(previewId);
+      var img  = wrap.querySelector('img');
+      var url  = this.value.trim();
+      if (!url) { wrap.style.display = 'none'; return; }
+      img.src = url;
+      img.onload  = function () { wrap.style.display = 'block'; };
+      img.onerror = function () { wrap.style.display = 'none'; };
+    });
+  }
+
+  // ── Tag chip input ────────────────────────────────────────────────────────────
+
+  function TagInput(wrapperId, textInputId) {
+    var wrapper = $(wrapperId);
+    var input   = $(textInputId);
+    var tags    = [];
+
+    function render() {
+      wrapper.querySelectorAll('.tag-chip').forEach(function (c) { c.remove(); });
+      tags.forEach(function (tag, i) {
+        var chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = esc(tag) + '<button type="button">×</button>';
+        chip.querySelector('button').addEventListener('click', function () {
+          tags.splice(i, 1); render();
+        });
+        wrapper.insertBefore(chip, input);
+      });
+    }
+
+    function add(val) {
+      var v = val.trim().replace(/,/g,'');
+      if (v && !tags.includes(v)) { tags.push(v); render(); }
+      input.value = '';
+    }
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(this.value); }
+      else if (e.key === 'Backspace' && !this.value && tags.length) { tags.pop(); render(); }
+    });
+    input.addEventListener('blur', function () { if (this.value.trim()) add(this.value); });
+    wrapper.addEventListener('click', function () { input.focus(); });
+
+    return {
+      set:   function (arr) { tags = arr.slice(); render(); },
+      get:   function ()    { return tags.slice(); },
+      clear: function ()    { tags = []; render(); },
+    };
+  }
+
+  var scopeTags = TagInput('scope-wrapper', 'scope-text');
+
+  // ── Sidebar navigation ────────────────────────────────────────────────────────
+
+  document.querySelectorAll('.nav-item').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = this.dataset.section;
+      document.querySelectorAll('.nav-item').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.section').forEach(function (s) { s.classList.remove('active'); });
+      this.classList.add('active');
+      $('section-' + id).classList.add('active');
     });
   });
 
-  // ── Logout ────────────────────────────────────────────────────────────────
-  document.getElementById('logout-btn').addEventListener('click', function () {
-    pw = '';
-    loginScreen.style.display  = 'block';
-    editorScreen.style.display = 'none';
-    document.getElementById('pw-input').value = '';
-    hideMsg(loginMsg);
+  // ── Login / logout ────────────────────────────────────────────────────────────
+
+  $('pw-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') $('login-btn').click();
   });
 
-  // ── Publish ───────────────────────────────────────────────────────────────
-  document.getElementById('publish-btn').addEventListener('click', function () {
-    var btn = this;
-    hideMsg(editorMsg);
+  $('login-btn').addEventListener('click', function () {
+    var val = $('pw-input').value.trim();
+    if (!val) { showMsg('login-msg','Enter your password','error'); return; }
 
+    var btn = this;
+    btn.disabled = true; btn.textContent = 'Signing in…';
+
+    // Auth probe: POST a guaranteed-to-conflict body so 401 = wrong pw, anything else = authed
+    fetch(BLOG_API, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-admin-password': val },
+      body: JSON.stringify({ title:'__auth__', slug:'__auth__', content:'__auth__' }),
+    }).then(function (r) {
+      btn.disabled = false; btn.textContent = 'Sign In';
+      if (r.status === 401) { showMsg('login-msg','Incorrect password','error'); return; }
+      pw = val;
+      $('login-screen').style.display = 'none';
+      $('app-shell').style.display    = 'flex';
+      loadBlog(); loadCaseStudies();
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = 'Sign In';
+      showMsg('login-msg','Could not connect to server','error');
+    });
+  });
+
+  $('logout-btn').addEventListener('click', function () {
+    pw = '';
+    $('app-shell').style.display    = 'none';
+    $('login-screen').style.display = 'flex';
+    $('pw-input').value = '';
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // BLOG
+  // ══════════════════════════════════════════════════════════════════════════════
+
+  $('b-title').addEventListener('input', function () {
+    if (!$('b-editing-slug').value) $('b-slug').value = slugify(this.value);
+  });
+  bindImgPreview('b-cover', 'b-cover-preview');
+
+  function clearBlogForm() {
+    ['b-title','b-slug','b-excerpt','b-cover','b-content','b-seo-title','b-seo-desc'].forEach(function(id){ $(id).value=''; });
+    $('b-editing-slug').value = '';
+    $('b-cover-preview').style.display = 'none';
+    $('blog-form-heading').textContent = 'New Blog Post';
+    $('b-publish-btn').textContent = 'Publish';
+    $('b-draft-btn').textContent   = 'Save as Draft';
+    hideMsg('blog-msg');
+  }
+
+  $('blog-new-btn').addEventListener('click', function () {
+    clearBlogForm();
+    showPanel('blog-form-panel');
+  });
+  $('blog-cancel-btn').addEventListener('click', function () {
+    $('blog-form-panel').classList.remove('visible'); clearBlogForm();
+  });
+
+  function showPanel(id) {
+    var p = $(id);
+    p.classList.add('visible');
+    p.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  function submitBlog(status) {
+    var editing = $('b-editing-slug').value;
     var payload = {
-      title:          document.getElementById('f-title').value.trim(),
-      slug:           document.getElementById('f-slug').value.trim(),
-      content:        document.getElementById('f-content').value.trim(),
-      excerpt:        document.getElementById('f-excerpt').value.trim(),
-      coverImage:     document.getElementById('f-cover').value.trim(),
-      seoTitle:       document.getElementById('f-seo-title').value.trim(),
-      seoDescription: document.getElementById('f-seo-desc').value.trim(),
+      title:          $('b-title').value.trim(),
+      slug:           $('b-slug').value.trim(),
+      content:        $('b-content').value.trim(),
+      excerpt:        $('b-excerpt').value.trim(),
+      coverImage:     $('b-cover').value.trim(),
+      seoTitle:       $('b-seo-title').value.trim(),
+      seoDescription: $('b-seo-desc').value.trim(),
+      status:         status,
     };
 
-    if (!payload.title)   { showMsg(editorMsg, 'Title is required', 'error'); return; }
-    if (!payload.slug)    { showMsg(editorMsg, 'Slug is required', 'error'); return; }
-    if (!payload.content) { showMsg(editorMsg, 'Content is required', 'error'); return; }
+    if (!payload.title)               { showMsg('blog-msg','Title is required','error'); return; }
+    if (!payload.content)             { showMsg('blog-msg','Content is required','error'); return; }
+    if (!editing && !payload.slug)    { showMsg('blog-msg','Slug is required','error'); return; }
 
+    var btn = status === 'published' ? $('b-publish-btn') : $('b-draft-btn');
     btn.disabled = true;
-    btn.textContent = 'Publishing...';
 
-    fetch(API + '/posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': pw },
-      body: JSON.stringify(payload),
-    }).then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
-      .then(function (result) {
+    var url = editing ? BLOG_API + '/' + editing : BLOG_API;
+    fetch(url, { method: editing ? 'PUT' : 'POST', headers: authHdr(), body: JSON.stringify(payload) })
+      .then(function (r) { return r.json().then(function(d){ return {ok:r.ok, s:r.status, d:d}; }); })
+      .then(function (res) {
         btn.disabled = false;
-        btn.textContent = 'Publish Post';
-        if (result.status === 201) {
-          showMsg(editorMsg, 'Post published successfully!', 'success');
-          document.getElementById('f-title').value   = '';
-          document.getElementById('f-slug').value    = '';
-          document.getElementById('f-excerpt').value = '';
-          document.getElementById('f-cover').value   = '';
-          document.getElementById('f-content').value = '';
-          document.getElementById('f-seo-title').value = '';
-          document.getElementById('f-seo-desc').value  = '';
-          loadPosts();
+        if (res.ok || res.s === 201) {
+          showMsg('blog-msg', editing ? 'Post updated.' : 'Post created.', 'success');
+          setTimeout(function(){ $('blog-form-panel').classList.remove('visible'); clearBlogForm(); }, 800);
+          loadBlog();
         } else {
-          showMsg(editorMsg, result.data.error || 'Something went wrong', 'error');
+          showMsg('blog-msg', res.d.error || 'Something went wrong', 'error');
         }
-      }).catch(function () {
-        btn.disabled = false;
-        btn.textContent = 'Publish Post';
-        showMsg(editorMsg, 'Could not connect to server', 'error');
-      });
-  });
-
-  // ── Load existing posts ───────────────────────────────────────────────────
-  function loadPosts() {
-    var list = document.getElementById('posts-list');
-    list.innerHTML = '<span class="empty">Loading...</span>';
-
-    fetch(window.location.origin + '/api/blog')
-      .then(function (r) { return r.json(); })
-      .then(function (result) {
-        if (!result.data || result.data.length === 0) {
-          list.innerHTML = '<span class="empty">No posts yet</span>';
-          return;
-        }
-        list.innerHTML = '';
-        result.data.forEach(function (post) {
-          var item = document.createElement('div');
-          item.className = 'post-item';
-          item.innerHTML =
-            '<span>' + post.title + '</span>' +
-            '<button class="del-btn" data-slug="' + post.slug + '">Delete</button>';
-          list.appendChild(item);
-        });
-
-        list.querySelectorAll('.del-btn').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            if (!confirm('Delete "' + this.dataset.slug + '"?')) return;
-            var slug = this.dataset.slug;
-            fetch(API + '/posts/' + slug, {
-              method: 'DELETE',
-              headers: { 'x-admin-password': pw },
-            }).then(function () { loadPosts(); });
-          });
-        });
-      })
-      .catch(function () {
-        list.innerHTML = '<span class="empty">Failed to load posts</span>';
-      });
+      }).catch(function(){ btn.disabled=false; showMsg('blog-msg','Could not connect','error'); });
   }
+
+  $('b-publish-btn').addEventListener('click', function(){ submitBlog('published'); });
+  $('b-draft-btn').addEventListener('click',   function(){ submitBlog('draft'); });
+
+  function loadBlog() {
+    $('blog-table').innerHTML = '<div class="table-empty">Loading…</div>';
+    fetch(ORIGIN + '/api/blog')
+      .then(function(r){ return r.json(); })
+      .then(function(res){ renderBlogTable(res.data || []); })
+      .catch(function(){ $('blog-table').innerHTML='<div class="table-empty">Failed to load.</div>'; });
+  }
+
+  function renderBlogTable(posts) {
+    if (!posts.length) { $('blog-table').innerHTML='<div class="table-empty">No posts yet.</div>'; return; }
+    var rows = posts.map(function(p){
+      var status = p.status || 'published';
+      var slug   = esc(p.slug);
+      var data   = esc(JSON.stringify(p));
+      return '<tr>'+
+        '<td class="cell-title">'+esc(p.title)+'</td>'+
+        '<td>'+badgeStatus(status)+'</td>'+
+        '<td class="cell-meta">'+fmtDate(p.createdAt)+'</td>'+
+        '<td class="td-actions">'+
+          '<button class="btn btn-secondary btn-sm" onclick="editBlog(\''+data+'\')">Edit</button>'+
+          '<button class="btn btn-secondary btn-sm" onclick="toggleBlog(\''+slug+'\',this)">'+(status==='published'?'Unpublish':'Publish')+'</button>'+
+          '<button class="btn btn-danger btn-sm" onclick="delBlog(\''+slug+'\',this)">Delete</button>'+
+        '</td>'+
+      '</tr>';
+    }).join('');
+    $('blog-table').innerHTML='<table><thead><tr><th>Title</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
+  window.editBlog = function(dataStr){
+    var p = JSON.parse(dataStr);
+    clearBlogForm();
+    $('b-title').value    = p.title   || '';
+    $('b-slug').value     = p.slug    || '';
+    $('b-excerpt').value  = p.excerpt || '';
+    $('b-cover').value    = p.coverImage || '';
+    $('b-content').value  = p.content || '';
+    $('b-seo-title').value= p.seoTitle || '';
+    $('b-seo-desc').value = p.seoDescription || '';
+    $('b-editing-slug').value = p.slug;
+    $('blog-form-heading').textContent = 'Edit Post';
+    $('b-publish-btn').textContent = 'Update & Publish';
+    $('b-draft-btn').textContent   = 'Update as Draft';
+    if (p.coverImage) { var prev=$('b-cover-preview'); prev.querySelector('img').src=p.coverImage; prev.style.display='block'; }
+    showPanel('blog-form-panel');
+  };
+
+  window.toggleBlog = function(slug, btn){
+    btn.disabled=true;
+    fetch(BLOG_API+'/'+slug+'/status',{method:'PATCH',headers:authHdr()})
+      .then(function(){ loadBlog(); }).catch(function(){ btn.disabled=false; });
+  };
+
+  window.delBlog = function(slug, btn){
+    if(!confirm('Delete "'+slug+'"? This cannot be undone.')) return;
+    btn.disabled=true;
+    fetch(BLOG_API+'/'+slug,{method:'DELETE',headers:authHdr()})
+      .then(function(){ loadBlog(); }).catch(function(){ btn.disabled=false; });
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // CASE STUDIES
+  // ══════════════════════════════════════════════════════════════════════════════
+
+  $('cs-title').addEventListener('input', function(){
+    if (!$('cs-editing-slug').value) $('cs-slug').value = slugify(this.value);
+  });
+  bindImgPreview('cs-cover',    'cs-cover-preview');
+  bindImgPreview('cs-body-img', 'cs-body-preview');
+
+  function clearCsForm(){
+    ['cs-title','cs-slug','cs-subtitle','cs-industry','cs-timeline','cs-year',
+     'cs-live-url','cs-s1v','cs-s1l','cs-s2v','cs-s2l','cs-challenge','cs-strategy',
+     'cs-cover','cs-body-img','cs-seo-title','cs-seo-desc','cs-order'].forEach(function(id){ $(id).value=''; });
+    scopeTags.clear();
+    $('cs-editing-slug').value='';
+    $('cs-cover-preview').style.display='none';
+    $('cs-body-preview').style.display ='none';
+    $('cs-form-heading').textContent = 'New Case Study';
+    $('cs-publish-btn').textContent = 'Publish';
+    $('cs-draft-btn').textContent   = 'Save as Draft';
+    hideMsg('cs-msg');
+  }
+
+  $('cs-new-btn').addEventListener('click', function(){ clearCsForm(); showPanel('cs-form-panel'); });
+  $('cs-cancel-btn').addEventListener('click', function(){ $('cs-form-panel').classList.remove('visible'); clearCsForm(); });
+
+  function submitCs(status){
+    var editing = $('cs-editing-slug').value;
+    var scope   = scopeTags.get();
+    var payload = {
+      title:          $('cs-title').value.trim(),
+      slug:           $('cs-slug').value.trim(),
+      subtitle:       $('cs-subtitle').value.trim(),
+      industry:       $('cs-industry').value.trim(),
+      timeline:       $('cs-timeline').value.trim(),
+      year:           parseInt($('cs-year').value, 10) || undefined,
+      scopeOfWork:    scope,
+      livePreviewUrl: $('cs-live-url').value.trim()  || undefined,
+      stats: [
+        { value: $('cs-s1v').value.trim(), label: $('cs-s1l').value.trim() },
+        { value: $('cs-s2v').value.trim(), label: $('cs-s2l').value.trim() },
+      ],
+      challenge:      $('cs-challenge').value.trim(),
+      strategy:       $('cs-strategy').value.trim(),
+      coverImage:     $('cs-cover').value.trim()     || undefined,
+      bodyImage:      $('cs-body-img').value.trim()  || undefined,
+      seoTitle:       $('cs-seo-title').value.trim() || undefined,
+      seoDescription: $('cs-seo-desc').value.trim()  || undefined,
+      order:          $('cs-order').value ? parseInt($('cs-order').value, 10) : undefined,
+      status:         status,
+    };
+
+    if (!payload.title)           { showMsg('cs-msg','Title is required','error'); return; }
+    if (!payload.subtitle)        { showMsg('cs-msg','Subtitle is required','error'); return; }
+    if (!payload.industry)        { showMsg('cs-msg','Industry is required','error'); return; }
+    if (!payload.year)            { showMsg('cs-msg','Year is required','error'); return; }
+    if (!scope.length)            { showMsg('cs-msg','Add at least one Scope of Work item','error'); return; }
+    if (!payload.stats[0].value || !payload.stats[0].label ||
+        !payload.stats[1].value || !payload.stats[1].label) {
+      showMsg('cs-msg','Both stats need a value and a label','error'); return;
+    }
+    if (!payload.challenge)       { showMsg('cs-msg','Challenge is required','error'); return; }
+    if (!payload.strategy)        { showMsg('cs-msg','Strategy is required','error'); return; }
+
+    var btn = status==='published' ? $('cs-publish-btn') : $('cs-draft-btn');
+    btn.disabled=true;
+
+    var url = editing ? CS_API+'/'+editing : CS_API;
+    fetch(url, { method: editing?'PUT':'POST', headers: authHdr(), body: JSON.stringify(payload) })
+      .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,s:r.status,d:d}; }); })
+      .then(function(res){
+        btn.disabled=false;
+        if (res.ok || res.s===201){
+          showMsg('cs-msg', editing?'Case study updated.':'Case study created.','success');
+          setTimeout(function(){ $('cs-form-panel').classList.remove('visible'); clearCsForm(); }, 800);
+          loadCaseStudies();
+        } else {
+          showMsg('cs-msg', res.d.error||'Something went wrong','error');
+        }
+      }).catch(function(){ btn.disabled=false; showMsg('cs-msg','Could not connect','error'); });
+  }
+
+  $('cs-publish-btn').addEventListener('click', function(){ submitCs('published'); });
+  $('cs-draft-btn').addEventListener('click',   function(){ submitCs('draft'); });
+
+  function loadCaseStudies(){
+    $('cs-table').innerHTML='<div class="table-empty">Loading…</div>';
+    fetch(CS_API+'/admin/list', { headers:{'x-admin-password':pw} })
+      .then(function(r){ return r.json(); })
+      .then(function(res){ renderCsTable(res.data||[]); })
+      .catch(function(){ $('cs-table').innerHTML='<div class="table-empty">Failed to load.</div>'; });
+  }
+
+  function renderCsTable(studies){
+    if (!studies.length){ $('cs-table').innerHTML='<div class="table-empty">No case studies yet.</div>'; return; }
+    var rows = studies.map(function(cs){
+      var isStatic = cs.source==='static';
+      var slug     = esc(cs.slug);
+      var delAttr  = isStatic
+        ? 'disabled title="Remove the static HTML file first before deleting."'
+        : 'onclick="delCs(\''+slug+'\',this)"';
+      return '<tr>'+
+        '<td class="cell-title">'+esc(cs.title)+'</td>'+
+        '<td class="cell-meta">'+esc(cs.industry||'—')+'</td>'+
+        '<td class="cell-meta">'+esc(cs.year||'—')+'</td>'+
+        '<td>'+badgeSource(cs.source)+'</td>'+
+        '<td>'+badgeStatus(cs.status)+'</td>'+
+        '<td class="td-actions">'+
+          '<button class="btn btn-secondary btn-sm" onclick="editCs(\''+slug+'\')">Edit</button>'+
+          '<button class="btn btn-secondary btn-sm" onclick="toggleCs(\''+slug+'\',this)">'+(cs.status==='published'?'Unpublish':'Publish')+'</button>'+
+          '<button class="btn btn-danger btn-sm" '+delAttr+'>Delete</button>'+
+        '</td>'+
+      '</tr>';
+    }).join('');
+    $('cs-table').innerHTML='<table><thead><tr><th>Title</th><th>Industry</th><th>Year</th><th>Source</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
+  window.editCs = function(slug){
+    fetch(CS_API+'/admin/'+slug, { headers:{'x-admin-password':pw} })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var s = res.data;
+        clearCsForm();
+        $('cs-title').value    = s.title    || '';
+        $('cs-slug').value     = s.slug     || '';
+        $('cs-subtitle').value = s.subtitle || '';
+        $('cs-industry').value = s.industry || '';
+        $('cs-timeline').value = s.timeline || '';
+        $('cs-year').value     = s.year     || '';
+        $('cs-live-url').value = s.livePreviewUrl || '';
+        scopeTags.set(s.scopeOfWork || []);
+        if (s.stats && s.stats[0]){ $('cs-s1v').value=s.stats[0].value||''; $('cs-s1l').value=s.stats[0].label||''; }
+        if (s.stats && s.stats[1]){ $('cs-s2v').value=s.stats[1].value||''; $('cs-s2l').value=s.stats[1].label||''; }
+        $('cs-challenge').value  = s.challenge      || '';
+        $('cs-strategy').value   = s.strategy       || '';
+        $('cs-cover').value      = s.coverImage     || '';
+        $('cs-body-img').value   = s.bodyImage      || '';
+        $('cs-seo-title').value  = s.seoTitle       || '';
+        $('cs-seo-desc').value   = s.seoDescription || '';
+        $('cs-order').value      = s.order != null  ? s.order : '';
+        $('cs-editing-slug').value = s.slug;
+        $('cs-form-heading').textContent = 'Edit — '+s.title;
+        $('cs-publish-btn').textContent = 'Update & Publish';
+        $('cs-draft-btn').textContent   = 'Update as Draft';
+        if (s.coverImage){ var cp=$('cs-cover-preview'); cp.querySelector('img').src=s.coverImage; cp.style.display='block'; }
+        if (s.bodyImage) { var bp=$('cs-body-preview');  bp.querySelector('img').src=s.bodyImage;  bp.style.display='block'; }
+        showPanel('cs-form-panel');
+      });
+  };
+
+  window.toggleCs = function(slug, btn){
+    btn.disabled=true;
+    fetch(CS_API+'/'+slug+'/status',{method:'PATCH',headers:authHdr()})
+      .then(function(){ loadCaseStudies(); }).catch(function(){ btn.disabled=false; });
+  };
+
+  window.delCs = function(slug, btn){
+    if(!confirm('Delete "'+slug+'"? This cannot be undone.')) return;
+    btn.disabled=true;
+    fetch(CS_API+'/'+slug,{method:'DELETE',headers:authHdr()})
+      .then(function(){ loadCaseStudies(); }).catch(function(){ btn.disabled=false; });
+  };
+
 })();
 </script>
 </body>

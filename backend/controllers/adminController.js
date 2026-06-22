@@ -34,6 +34,47 @@ async function createPost(req, res, next) {
   }
 }
 
+async function updatePost(req, res, next) {
+  try {
+    const post = await BlogPost.findOne({ slug: req.params.slug, source: 'mongo' });
+    if (!post) return next(new AppError('Post not found', 404));
+
+    const { title, content, excerpt, coverImage, seoTitle, seoDescription } = req.body;
+
+    const updates = {};
+    if (title          !== undefined) updates.title          = title.trim();
+    if (content        !== undefined) updates.content        = content.trim();
+    if (excerpt        !== undefined) updates.excerpt        = excerpt?.trim()        || undefined;
+    if (coverImage     !== undefined) updates.coverImage     = coverImage?.trim()     || undefined;
+    if (seoTitle       !== undefined) updates.seoTitle       = seoTitle?.trim()       || undefined;
+    if (seoDescription !== undefined) updates.seoDescription = seoDescription?.trim() || undefined;
+
+    const updated = await BlogPost.findOneAndUpdate(
+      { slug: req.params.slug, source: 'mongo' },
+      updates,
+      { new: true, runValidators: true }
+    );
+
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function togglePostStatus(req, res, next) {
+  try {
+    const post = await BlogPost.findOne({ slug: req.params.slug, source: 'mongo' });
+    if (!post) return next(new AppError('Post not found', 404));
+
+    post.status = post.status === 'published' ? 'draft' : 'published';
+    await post.save();
+
+    res.json({ success: true, data: { slug: post.slug, status: post.status } });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function deletePost(req, res, next) {
   try {
     const post = await BlogPost.findOneAndDelete({ slug: req.params.slug, source: 'mongo' });
@@ -44,4 +85,4 @@ async function deletePost(req, res, next) {
   }
 }
 
-module.exports = { createPost, deletePost };
+module.exports = { createPost, updatePost, togglePostStatus, deletePost };
