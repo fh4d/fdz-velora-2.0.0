@@ -5,6 +5,10 @@
     {
       "source": "/blog/:slug((?!turning-social-platforms-into-scalable-growth-channels|the-growth-systems-behind-high-performing-marketing-campaigns|why-strong-branding-is-the-foundation-of-every-successful-business).*)",
       "destination": "/blog/post"
+    },
+    {
+      "source": "/case-studies/:slug((?!nexlify-saas|orvexa-real-estate|scaleon-e-commerce|velora-finance).*)",
+      "destination": "/case-studies/post"
     }
   ]
 }
