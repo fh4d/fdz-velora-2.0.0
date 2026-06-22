@@ -33,24 +33,7 @@
 	<meta name="robots" content="max-image-preview:large"><link rel="canonical" href="https://turquoise-lemur-139782.framer.app/blog/turning-social-platforms-into-scalable-growth-channels"><meta property="og:url" content="https://turquoise-lemur-139782.framer.app/blog/turning-social-platforms-into-scalable-growth-channels"><!-- Start of headEnd -->
     
     <!-- End of headEnd -->
-<script src="/integration.js" defer></script><style id="fdz-anim">
-/* Hide content zones until JS injects real data — prevents flash of static content */
-.framer-1kv0cy4,
-.framer-2cgyj7,
-.framer-7z0ekd,
-.framer-1kqbwmx { opacity: 0; }
-/* FDZ entrance animation — remove this <style> block to revert */
-@keyframes fdzFadeUp {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.fdz-animate {
-  animation: fdzFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.fdz-d1 { animation-delay: 0.05s; }
-.fdz-d2 { animation-delay: 0.13s; }
-.fdz-d3 { animation-delay: 0.21s; }
-.fdz-d4 { animation-delay: 0.30s; }
+<script src="/integration.js" defer></script>
 </style></head>
 <body>
 	
@@ -81,6 +64,21 @@
 <div id="__framer-editorbar-container" dir="ltr" style="right: 10px; top: calc(-15px + 50vh); transform: translate(0px, 0px); transition: transform 100ms cubic-bezier(0.2, 0, 0, 1); cursor: pointer;"><span aria-label="Edit Framer Content" id="__framer-editorbar-label" style="right: 40px;">Edit Content</span><button type="button" aria-labelledby="__framer-editorbar-label" id="__framer-editorbar-button"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"><path d="M8.75 2.25a1.77 1.77 0 0 1 2.5 0h0c.69.69.69 1.81 0 2.5l-7 7h-2.5v-2.5Z" fill="transparent" stroke-width="1.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 11.75h3.75" fill="transparent" stroke-width="1.5" stroke="currentColor" stroke-linecap="round"></path></svg></button></div><iframe id="__framer-editorbar" src="https://framer.com/edit?framerSiteId=88d2ed7a57f3887ff78ef3934c001cee72728a72b25585615d32919c3168b1b1&amp;source=turquoise-lemur-139782.framer.app&amp;features=%7B%22editorBarDisableFrameAncestorsSecurity%22%3Afalse%2C%22onPageLocalizationSupport%22%3Atrue%2C%22onPageMoveTool%22%3Atrue%7D&amp;loadStart=1781924627167&amp;forceShow=true" aria-hidden="true" allow="autoplay" tabindex="-1" class="status_visually_hidden"></iframe><script>
 (function () {
   var API = 'https://fdz-velora-200-production.up.railway.app/api';
+
+  // Inject animation CSS via JS — keeps it out of static HTML so React hydration doesn't flag a mismatch
+  var animStyle = document.createElement('style');
+  animStyle.textContent = '@keyframes fdzFadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}.fdz-animate{animation:fdzFadeUp 0.55s cubic-bezier(.22,1,.36,1) both}.fdz-d1{animation-delay:.05s}.fdz-d2{animation-delay:.13s}.fdz-d3{animation-delay:.21s}.fdz-d4{animation-delay:.30s}';
+  document.head.appendChild(animStyle);
+
+  // Overlay covers the page while we fetch — our own node, React never touches it
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:9999;transition:opacity 0.25s ease';
+  document.body.appendChild(overlay);
+
+  function removeOverlay() {
+    overlay.style.opacity = '0';
+    setTimeout(function() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 300);
+  }
 
   var slug = window.location.pathname.replace(/\/$/, '').split('/').filter(Boolean).pop();
 
@@ -166,10 +164,13 @@
       animEls.forEach(function(pair) {
         if (pair[0]) pair[0].classList.add('fdz-animate', pair[1]);
       });
+
+      removeOverlay();
     })
     .catch(function() {
       var bodyEl = document.querySelector('.framer-1kqbwmx');
       if (bodyEl) bodyEl.innerHTML = '<p class="framer-text framer-styles-preset-1oy0gio">Post not found. <a href="/blog">Back to Blog</a></p>';
+      removeOverlay();
     });
 })();
 </script>
