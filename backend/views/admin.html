@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FDZ Velora — Blog Admin</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0a;
+    color: #e5e5e5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .card {
+    background: #141414;
+    border: 1px solid #262626;
+    border-radius: 12px;
+    padding: 40px;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .logo {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fe3f01;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 32px;
+  }
+
+  .field { margin-bottom: 20px; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #737373;
+    margin-bottom: 8px;
+  }
+
+  input, textarea {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #262626;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #e5e5e5;
+    font-family: inherit;
+    transition: border-color 0.15s;
+    outline: none;
+    resize: vertical;
+  }
+
+  input:focus, textarea:focus { border-color: #fe3f01; }
+
+  textarea { min-height: 180px; }
+
+  .hint {
+    font-size: 11px;
+    color: #525252;
+    margin-top: 5px;
+  }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    background: #fe3f01;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.15s;
+  }
+
+  button:hover { opacity: 0.88; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .msg {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+
+  .msg.success { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+  .msg.error   { background: #2d0a0a; color: #f87171; border: 1px solid #7f1d1d; }
+
+  /* Login screen */
+  #login-screen { display: block; }
+  #editor-screen { display: none; }
+
+  .logout {
+    font-size: 12px;
+    color: #525252;
+    cursor: pointer;
+    float: right;
+    margin-top: 4px;
+  }
+  .logout:hover { color: #e5e5e5; }
+
+  /* Posts list */
+  .posts-section { margin-top: 40px; border-top: 1px solid #262626; padding-top: 32px; }
+  .posts-section h2 { font-size: 15px; color: #737373; margin-bottom: 16px; }
+  .post-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #1a1a1a;
+    font-size: 14px;
+  }
+  .post-item span { color: #a3a3a3; }
+  .del-btn {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #1a1a1a;
+    border: 1px solid #262626;
+    border-radius: 6px;
+    color: #f87171;
+    margin-top: 0;
+  }
+  .del-btn:hover { background: #2d0a0a; opacity: 1; }
+  #posts-list .empty { color: #525252; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="card" id="login-screen">
+  <div class="logo">FDZ Velora</div>
+  <h1>Blog Admin</h1>
+  <div class="field">
+    <label>Admin Password</label>
+    <input type="password" id="pw-input" placeholder="Enter password" autocomplete="current-password">
+  </div>
+  <button id="login-btn">Sign In</button>
+  <div class="msg" id="login-msg"></div>
+</div>
+
+<!-- Editor -->
+<div class="card" id="editor-screen">
+  <div class="logo">FDZ Velora <span class="logout" id="logout-btn">Sign out</span></div>
+  <h1>New Blog Post</h1>
+
+  <div class="field">
+    <label>Title *</label>
+    <input type="text" id="f-title" placeholder="How to Build a Brand That Lasts">
+  </div>
+
+  <div class="field">
+    <label>Slug *</label>
+    <input type="text" id="f-slug" placeholder="how-to-build-a-brand-that-lasts">
+    <div class="hint">Auto-generated from title. URL: /blog/your-slug</div>
+  </div>
+
+  <div class="field">
+    <label>Excerpt</label>
+    <input type="text" id="f-excerpt" placeholder="A short summary shown on the blog listing page">
+  </div>
+
+  <div class="field">
+    <label>Cover Image URL</label>
+    <input type="url" id="f-cover" placeholder="https://...">
+  </div>
+
+  <div class="field">
+    <label>Content *</label>
+    <textarea id="f-content" placeholder="Write your blog post here..."></textarea>
+    <div class="hint">Plain text or basic HTML accepted.</div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>SEO Title</label>
+      <input type="text" id="f-seo-title" placeholder="Optional SEO title">
+    </div>
+    <div class="field">
+      <label>SEO Description</label>
+      <input type="text" id="f-seo-desc" placeholder="Optional meta description">
+    </div>
+  </div>
+
+  <button id="publish-btn">Publish Post</button>
+  <div class="msg" id="editor-msg"></div>
+
+  <div class="posts-section">
+    <h2>Published posts (MongoDB)</h2>
+    <div id="posts-list"><span class="empty">Loading...</span></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var API = window.location.origin + '/admin';
+  var pw  = '';
+
+  var loginScreen  = document.getElementById('login-screen');
+  var editorScreen = document.getElementById('editor-screen');
+  var loginMsg     = document.getElementById('login-msg');
+  var editorMsg    = document.getElementById('editor-msg');
+
+  function showMsg(el, text, type) {
+    el.textContent = text;
+    el.className   = 'msg ' + type;
+    el.style.display = 'block';
+  }
+
+  function hideMsg(el) { el.style.display = 'none'; }
+
+  // ── Auto-slug from title ──────────────────────────────────────────────────
+  document.getElementById('f-title').addEventListener('input', function () {
+    var slug = this.value.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+    document.getElementById('f-slug').value = slug;
+  });
+
+  // ── Login ─────────────────────────────────────────────────────────────────
+  document.getElementById('pw-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+
+  document.getElementById('login-btn').addEventListener('click', function () {
+    var val = document.getElementById('pw-input').value.trim();
+    if (!val) { showMsg(loginMsg, 'Enter your password', 'error'); return; }
+
+    this.disabled = true;
+    fetch(API + '/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': val },
+      body: JSON.stringify({ title: '__test__', slug: '__test__', content: '__test__' }),
+    }).then(function (res) {
+      document.getElementById('login-btn').disabled = false;
+      // 409 = wrong data but auth passed; 401 = wrong password
+      if (res.status === 401) { showMsg(loginMsg, 'Incorrect password', 'error'); return; }
+      pw = val;
+      loginScreen.style.display  = 'none';
+      editorScreen.style.display = 'block';
+      loadPosts();
+    }).catch(function () {
+      document.getElementById('login-btn').disabled = false;
+      showMsg(loginMsg, 'Could not connect to server', 'error');
+    });
+  });
+
+  // ── Logout ────────────────────────────────────────────────────────────────
+  document.getElementById('logout-btn').addEventListener('click', function () {
+    pw = '';
+    loginScreen.style.display  = 'block';
+    editorScreen.style.display = 'none';
+    document.getElementById('pw-input').value = '';
+    hideMsg(loginMsg);
+  });
+
+  // ── Publish ───────────────────────────────────────────────────────────────
+  document.getElementById('publish-btn').addEventListener('click', function () {
+    var btn = this;
+    hideMsg(editorMsg);
+
+    var payload = {
+      title:          document.getElementById('f-title').value.trim(),
+      slug:           document.getElementById('f-slug').value.trim(),
+      content:        document.getElementById('f-content').value.trim(),
+      excerpt:        document.getElementById('f-excerpt').value.trim(),
+      coverImage:     document.getElementById('f-cover').value.trim(),
+      seoTitle:       document.getElementById('f-seo-title').value.trim(),
+      seoDescription: document.getElementById('f-seo-desc').value.trim(),
+    };
+
+    if (!payload.title)   { showMsg(editorMsg, 'Title is required', 'error'); return; }
+    if (!payload.slug)    { showMsg(editorMsg, 'Slug is required', 'error'); return; }
+    if (!payload.content) { showMsg(editorMsg, 'Content is required', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Publishing...';
+
+    fetch(API + '/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': pw },
+      body: JSON.stringify(payload),
+    }).then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+      .then(function (result) {
+        btn.disabled = false;
+        btn.textContent = 'Publish Post';
+        if (result.status === 201) {
+          showMsg(editorMsg, 'Post published successfully!', 'success');
+          document.getElementById('f-title').value   = '';
+          document.getElementById('f-slug').value    = '';
+          document.getElementById('f-excerpt').value = '';
+          document.getElementById('f-cover').value   = '';
+          document.getElementById('f-content').value = '';
+          document.getElementById('f-seo-title').value = '';
+          document.getElementById('f-seo-desc').value  = '';
+          loadPosts();
+        } else {
+          showMsg(editorMsg, result.data.error || 'Something went wrong', 'error');
+        }
+      }).catch(function () {
+        btn.disabled = false;
+        btn.textContent = 'Publish Post';
+        showMsg(editorMsg, 'Could not connect to server', 'error');
+      });
+  });
+
+  // ── Load existing posts ───────────────────────────────────────────────────
+  function loadPosts() {
+    var list = document.getElementById('posts-list');
+    list.innerHTML = '<span class="empty">Loading...</span>';
+
+    fetch(window.location.origin + '/api/blog')
+      .then(function (r) { return r.json(); })
+      .then(function (result) {
+        if (!result.data || result.data.length === 0) {
+          list.innerHTML = '<span class="empty">No posts yet</span>';
+          return;
+        }
+        list.innerHTML = '';
+        result.data.forEach(function (post) {
+          var item = document.createElement('div');
+          item.className = 'post-item';
+          item.innerHTML =
+            '<span>' + post.title + '</span>' +
+            '<button class="del-btn" data-slug="' + post.slug + '">Delete</button>';
+          list.appendChild(item);
+        });
+
+        list.querySelectorAll('.del-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            if (!confirm('Delete "' + this.dataset.slug + '"?')) return;
+            var slug = this.dataset.slug;
+            fetch(API + '/posts/' + slug, {
+              method: 'DELETE',
+              headers: { 'x-admin-password': pw },
+            }).then(function () { loadPosts(); });
+          });
+        });
+      })
+      .catch(function () {
+        list.innerHTML = '<span class="empty">Failed to load posts</span>';
+      });
+  }
+})();
+</script>
+</body>
+</html>
