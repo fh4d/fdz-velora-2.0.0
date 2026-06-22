@@ -33,7 +33,20 @@
 	<meta name="robots" content="max-image-preview:large"><link rel="canonical" href="https://turquoise-lemur-139782.framer.app/blog/turning-social-platforms-into-scalable-growth-channels"><meta property="og:url" content="https://turquoise-lemur-139782.framer.app/blog/turning-social-platforms-into-scalable-growth-channels"><!-- Start of headEnd -->
     
     <!-- End of headEnd -->
-<script src="/integration.js" defer></script></head>
+<script src="/integration.js" defer></script><style id="fdz-anim">
+/* FDZ entrance animation — remove this <style> block to revert */
+@keyframes fdzFadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fdz-animate {
+  animation: fdzFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fdz-animate:nth-child(1) { animation-delay: 0.05s; }
+.fdz-animate:nth-child(2) { animation-delay: 0.12s; }
+.fdz-animate:nth-child(3) { animation-delay: 0.19s; }
+.fdz-animate:nth-child(4) { animation-delay: 0.26s; }
+</style></head>
 <body>
 	
 	<!-- Start of bodyStart -->
@@ -137,6 +150,16 @@
       // Body content
       var bodyEl = document.querySelector('.framer-1kqbwmx');
       if (bodyEl) bodyEl.innerHTML = toFramerHtml(post.content);
+
+      // Entrance animation — remove .fdz-animate calls to revert, keep CSS harmless
+      [
+        document.querySelector('.framer-1kv0cy4'),
+        document.querySelector('.framer-2cgyj7'),
+        document.querySelector('.framer-7z0ekd'),
+        bodyEl
+      ].forEach(function(el) {
+        if (el) el.classList.add('fdz-animate');
+      });
     })
     .catch(function() {
       var bodyEl = document.querySelector('.framer-1kqbwmx');
