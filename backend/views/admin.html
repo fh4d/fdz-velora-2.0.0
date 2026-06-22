@@ -388,16 +388,25 @@ tr:hover td { background: rgba(255,255,255,0.015); }
           <textarea id="cs-strategy" placeholder="Describe the approach taken…"></textarea>
         </div>
 
+        <div class="form-section-label">Related Projects</div>
+        <div class="field">
+          <label>Related Projects <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">press Enter or comma to add a slug</span></label>
+          <div class="tag-input-wrapper" id="related-wrapper">
+            <input class="tag-text-input" id="related-text" placeholder="e.g. velora-finance">
+          </div>
+          <div class="hint">Enter case study slugs. Leave empty to auto-fill from 2 other published case studies.</div>
+        </div>
+
         <div class="form-section-label">Media &amp; SEO</div>
         <div class="row-2">
           <div class="field">
-            <label>Cover Image URL</label>
-            <input type="url" id="cs-cover" placeholder="https://...">
-            <div class="img-preview" id="cs-cover-preview"><img alt=""></div>
+            <label>Hero Image URL</label>
+            <input type="url" id="cs-hero-img" placeholder="https://framerusercontent.com/...">
+            <div class="img-preview" id="cs-hero-preview"><img alt=""></div>
           </div>
           <div class="field">
             <label>Body Image URL</label>
-            <input type="url" id="cs-body-img" placeholder="https://...">
+            <input type="url" id="cs-body-img" placeholder="https://framerusercontent.com/...">
             <div class="img-preview" id="cs-body-preview"><img alt=""></div>
           </div>
         </div>
@@ -417,6 +426,7 @@ tr:hover td { background: rgba(255,255,255,0.015); }
         </div>
         <div class="msg" id="cs-msg"></div>
         <input type="hidden" id="cs-editing-slug">
+        <input type="hidden" id="cs-editing-id">
       </div>
 
       <div class="table-wrap" id="cs-table"></div>
@@ -526,7 +536,8 @@ tr:hover td { background: rgba(255,255,255,0.015); }
     };
   }
 
-  var scopeTags = TagInput('scope-wrapper', 'scope-text');
+  var scopeTags   = TagInput('scope-wrapper',   'scope-text');
+  var relatedTags = TagInput('related-wrapper', 'related-text');
 
   // ── Sidebar navigation ────────────────────────────────────────────────────────
 
@@ -715,17 +726,19 @@ tr:hover td { background: rgba(255,255,255,0.015); }
   $('cs-title').addEventListener('input', function(){
     if (!$('cs-editing-slug').value) $('cs-slug').value = slugify(this.value);
   });
-  bindImgPreview('cs-cover',    'cs-cover-preview');
+  bindImgPreview('cs-hero-img', 'cs-hero-preview');
   bindImgPreview('cs-body-img', 'cs-body-preview');
 
   function clearCsForm(){
     ['cs-title','cs-slug','cs-subtitle','cs-industry','cs-timeline','cs-year',
      'cs-live-url','cs-s1v','cs-s1l','cs-s2v','cs-s2l','cs-challenge','cs-strategy',
-     'cs-cover','cs-body-img','cs-seo-title','cs-seo-desc','cs-order'].forEach(function(id){ $(id).value=''; });
+     'cs-hero-img','cs-body-img','cs-seo-title','cs-seo-desc','cs-order'].forEach(function(id){ $(id).value=''; });
     scopeTags.clear();
+    relatedTags.clear();
     $('cs-editing-slug').value='';
-    $('cs-cover-preview').style.display='none';
-    $('cs-body-preview').style.display ='none';
+    $('cs-editing-id').value='';
+    $('cs-hero-preview').style.display='none';
+    $('cs-body-preview').style.display='none';
     $('cs-form-heading').textContent = 'New Case Study';
     $('cs-publish-btn').textContent = 'Publish';
     $('cs-draft-btn').textContent   = 'Save as Draft';
@@ -736,29 +749,32 @@ tr:hover td { background: rgba(255,255,255,0.015); }
   $('cs-cancel-btn').addEventListener('click', function(){ $('cs-form-panel').classList.remove('visible'); clearCsForm(); });
 
   function submitCs(status){
-    var editing = $('cs-editing-slug').value;
-    var scope   = scopeTags.get();
+    var editingSlug = $('cs-editing-slug').value;
+    var editingId   = $('cs-editing-id').value;
+    var scope       = scopeTags.get();
+    var related     = relatedTags.get().map(function(s){ return { slug: s }; });
     var payload = {
-      title:          $('cs-title').value.trim(),
-      slug:           $('cs-slug').value.trim(),
-      subtitle:       $('cs-subtitle').value.trim(),
-      industry:       $('cs-industry').value.trim(),
-      timeline:       $('cs-timeline').value.trim(),
-      year:           parseInt($('cs-year').value, 10) || undefined,
-      scopeOfWork:    scope,
-      livePreviewUrl: $('cs-live-url').value.trim()  || undefined,
+      title:           $('cs-title').value.trim(),
+      slug:            $('cs-slug').value.trim(),
+      subtitle:        $('cs-subtitle').value.trim(),
+      industry:        $('cs-industry').value.trim(),
+      timeline:        $('cs-timeline').value.trim(),
+      year:            parseInt($('cs-year').value, 10) || undefined,
+      scopeOfWork:     scope,
+      livePreviewUrl:  $('cs-live-url').value.trim()   || undefined,
       stats: [
         { value: $('cs-s1v').value.trim(), label: $('cs-s1l').value.trim() },
         { value: $('cs-s2v').value.trim(), label: $('cs-s2l').value.trim() },
       ],
-      challenge:      $('cs-challenge').value.trim(),
-      strategy:       $('cs-strategy').value.trim(),
-      coverImage:     $('cs-cover').value.trim()     || undefined,
-      bodyImage:      $('cs-body-img').value.trim()  || undefined,
-      seoTitle:       $('cs-seo-title').value.trim() || undefined,
-      seoDescription: $('cs-seo-desc').value.trim()  || undefined,
-      order:          $('cs-order').value ? parseInt($('cs-order').value, 10) : undefined,
-      status:         status,
+      challenge:       $('cs-challenge').value.trim(),
+      strategy:        $('cs-strategy').value.trim(),
+      heroImage:       $('cs-hero-img').value.trim()   || undefined,
+      bodyImage:       $('cs-body-img').value.trim()   || undefined,
+      relatedProjects: related,
+      seoTitle:        $('cs-seo-title').value.trim()  || undefined,
+      seoDescription:  $('cs-seo-desc').value.trim()   || undefined,
+      order:           $('cs-order').value ? parseInt($('cs-order').value, 10) : undefined,
+      status:          status,
     };
 
     if (!payload.title)           { showMsg('cs-msg','Title is required','error'); return; }
@@ -776,13 +792,15 @@ tr:hover td { background: rgba(255,255,255,0.015); }
     var btn = status==='published' ? $('cs-publish-btn') : $('cs-draft-btn');
     btn.disabled=true;
 
-    var url = editing ? CS_API+'/'+editing : CS_API;
-    fetch(url, { method: editing?'PUT':'POST', headers: authHdr(), body: JSON.stringify(payload) })
+    // PUT uses MongoDB _id per spec; POST uses base endpoint
+    var url    = editingId ? CS_API + '/' + editingId : CS_API;
+    var method = editingId ? 'PUT' : 'POST';
+    fetch(url, { method: method, headers: authHdr(), body: JSON.stringify(payload) })
       .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,s:r.status,d:d}; }); })
       .then(function(res){
         btn.disabled=false;
         if (res.ok || res.s===201){
-          showMsg('cs-msg', editing?'Case study updated.':'Case study created.','success');
+          showMsg('cs-msg', editingId?'Case study updated.':'Case study created.','success');
           setTimeout(function(){ $('cs-form-panel').classList.remove('visible'); clearCsForm(); }, 800);
           loadCaseStudies();
         } else {
@@ -805,25 +823,21 @@ tr:hover td { background: rgba(255,255,255,0.015); }
   function renderCsTable(studies){
     if (!studies.length){ $('cs-table').innerHTML='<div class="table-empty">No case studies yet.</div>'; return; }
     var rows = studies.map(function(cs){
-      var isStatic = cs.source==='static';
-      var slug     = esc(cs.slug);
-      var delAttr  = isStatic
-        ? 'disabled title="Remove the static HTML file first before deleting."'
-        : 'onclick="delCs(\''+slug+'\',this)"';
+      var slug = esc(cs.slug);
+      var id   = esc(cs._id);
       return '<tr>'+
         '<td class="cell-title">'+esc(cs.title)+'</td>'+
         '<td class="cell-meta">'+esc(cs.industry||'—')+'</td>'+
         '<td class="cell-meta">'+esc(cs.year||'—')+'</td>'+
-        '<td>'+badgeSource(cs.source)+'</td>'+
         '<td>'+badgeStatus(cs.status)+'</td>'+
         '<td class="td-actions">'+
           '<button class="btn btn-secondary btn-sm" onclick="editCs(\''+slug+'\')">Edit</button>'+
           '<button class="btn btn-secondary btn-sm" onclick="toggleCs(\''+slug+'\',this)">'+(cs.status==='published'?'Unpublish':'Publish')+'</button>'+
-          '<button class="btn btn-danger btn-sm" '+delAttr+'>Delete</button>'+
+          '<button class="btn btn-danger btn-sm" onclick="delCs(\''+id+'\',\''+slug+'\',this)">Delete</button>'+
         '</td>'+
       '</tr>';
     }).join('');
-    $('cs-table').innerHTML='<table><thead><tr><th>Title</th><th>Industry</th><th>Year</th><th>Source</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    $('cs-table').innerHTML='<table><thead><tr><th>Title</th><th>Industry</th><th>Year</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
   window.editCs = function(slug){
@@ -840,21 +854,24 @@ tr:hover td { background: rgba(255,255,255,0.015); }
         $('cs-year').value     = s.year     || '';
         $('cs-live-url').value = s.livePreviewUrl || '';
         scopeTags.set(s.scopeOfWork || []);
+        // Populate related projects tag chip from [{slug}] array
+        relatedTags.set((s.relatedProjects || []).map(function(r){ return r.slug; }));
         if (s.stats && s.stats[0]){ $('cs-s1v').value=s.stats[0].value||''; $('cs-s1l').value=s.stats[0].label||''; }
         if (s.stats && s.stats[1]){ $('cs-s2v').value=s.stats[1].value||''; $('cs-s2l').value=s.stats[1].label||''; }
         $('cs-challenge').value  = s.challenge      || '';
         $('cs-strategy').value   = s.strategy       || '';
-        $('cs-cover').value      = s.coverImage     || '';
+        $('cs-hero-img').value   = s.heroImage      || '';
         $('cs-body-img').value   = s.bodyImage      || '';
         $('cs-seo-title').value  = s.seoTitle       || '';
         $('cs-seo-desc').value   = s.seoDescription || '';
         $('cs-order').value      = s.order != null  ? s.order : '';
         $('cs-editing-slug').value = s.slug;
+        $('cs-editing-id').value   = s._id;
         $('cs-form-heading').textContent = 'Edit — '+s.title;
         $('cs-publish-btn').textContent = 'Update & Publish';
         $('cs-draft-btn').textContent   = 'Update as Draft';
-        if (s.coverImage){ var cp=$('cs-cover-preview'); cp.querySelector('img').src=s.coverImage; cp.style.display='block'; }
-        if (s.bodyImage) { var bp=$('cs-body-preview');  bp.querySelector('img').src=s.bodyImage;  bp.style.display='block'; }
+        if (s.heroImage){ var hp=$('cs-hero-preview'); hp.querySelector('img').src=s.heroImage; hp.style.display='block'; }
+        if (s.bodyImage){ var bp=$('cs-body-preview');  bp.querySelector('img').src=s.bodyImage;  bp.style.display='block'; }
         showPanel('cs-form-panel');
       });
   };
@@ -865,10 +882,10 @@ tr:hover td { background: rgba(255,255,255,0.015); }
       .then(function(){ loadCaseStudies(); }).catch(function(){ btn.disabled=false; });
   };
 
-  window.delCs = function(slug, btn){
+  window.delCs = function(id, slug, btn){
     if(!confirm('Delete "'+slug+'"? This cannot be undone.')) return;
     btn.disabled=true;
-    fetch(CS_API+'/'+slug,{method:'DELETE',headers:authHdr()})
+    fetch(CS_API+'/'+id,{method:'DELETE',headers:authHdr()})
       .then(function(){ loadCaseStudies(); }).catch(function(){ btn.disabled=false; });
   };
 
