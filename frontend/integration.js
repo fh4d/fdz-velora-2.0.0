@@ -141,6 +141,75 @@
       });
   }
 
+  // ─── Blog: inject MongoDB posts on /blog ─────────────────────────────────────
+
+  function formatDate(iso) {
+    try {
+      return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function buildCard(post) {
+    var href = '/blog/' + post.slug;
+    var date = formatDate(post.createdAt);
+    var img  = post.coverImage
+      ? '<img src="' + post.coverImage + '" alt="" style="display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;">'
+      : '<div style="width:100%;height:100%;background:var(--token-ba7a9dfd-3e1d-4dea-a25f-9a0d49d43ddf,#fafafa);"></div>';
+
+    var a = document.createElement('a');
+    a.className = 'framer-1qp255k framer-dhua5q';
+    a.href      = href;
+    a.innerHTML =
+      '<div class="framer-9a40j0-container">' +
+        '<div class="framer-ljj9C framer-HhvlY framer-duqYB framer-r9o1x2 framer-v-srbsb0" style="background-color:var(--token-ba7a9dfd-3e1d-4dea-a25f-9a0d49d43ddf,#fafafa);width:100%;border-radius:8px;opacity:1;">' +
+          '<div class="framer-gnth2x" style="border-bottom-left-radius:8px;border-top-left-radius:8px;opacity:1;">' +
+            '<div class="framer-1a7h2da" style="transform:none;opacity:1;">' +
+              '<div data-framer-background-image-wrapper="true" style="position:absolute;border-radius:inherit;inset:0px;">' + img + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="framer-wvjvpc" style="opacity:1;">' +
+            '<div class="framer-1gxk1zs" data-framer-component-type="RichTextContainer" style="transform:none;opacity:1;">' +
+              '<p class="framer-text framer-styles-preset-e15wf0">' + post.title + '</p>' +
+            '</div>' +
+            '<div class="framer-psfemt" style="opacity:1;">' +
+              '<div class="framer-1igna9y" data-framer-component-type="RichTextContainer" style="transform:none;opacity:1;">' +
+                '<p class="framer-text framer-styles-preset-hod69l">' + date + '</p>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    return a;
+  }
+
+  function injectMongoBlogPosts() {
+    var pathname = window.location.pathname.replace(/\/$/, '') || '/';
+    if (pathname !== '/blog') return;
+
+    fetch(API_BASE + '/blog')
+      .then(function (res) { return res.json(); })
+      .then(function (result) {
+        if (!result.success || !result.data || result.data.length === 0) return;
+
+        // Find the container holding the existing blog cards
+        var container = document.querySelector('.framer-1ur6je4');
+        if (!container) return;
+
+        result.data.forEach(function (post) {
+          container.appendChild(buildCard(post));
+        });
+        log('Injected ' + result.data.length + ' MongoDB blog post(s)');
+      })
+      .catch(function () {
+        log('Blog fetch failed — skipping injection');
+      });
+  }
+
+  // Run after Framer hydrates (it uses a MessagePort/worker, so we wait for load)
+  window.addEventListener('load', injectMongoBlogPosts);
+
   // ─── Capture-phase submit interceptor ────────────────────────────────────────
 
   document.addEventListener(
