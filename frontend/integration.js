@@ -213,18 +213,17 @@
       });
   }
 
-  // Run on initial load and on every client-side navigation Framer performs
-  window.addEventListener('load', injectMongoBlogPosts);
-
-  // Framer's router uses history.pushState — intercept it to re-run on navigation
-  var _pushState = history.pushState.bind(history);
-  history.pushState = function () {
-    _pushState.apply(history, arguments);
-    setTimeout(injectMongoBlogPosts, 300);
-  };
-  window.addEventListener('popstate', function () {
-    setTimeout(injectMongoBlogPosts, 300);
+  // Watch for the blog container to appear in the DOM (handles Framer SPA nav)
+  var blogObserver = new MutationObserver(function () {
+    var pathname = window.location.pathname.replace(/\/$/, '') || '/';
+    if (pathname !== '/blog') return;
+    var container = document.querySelector('.framer-1ur6je4');
+    if (!container) return;
+    if (container.querySelector('.fdz-mongo-card')) return; // already injected
+    injectMongoBlogPosts();
   });
+
+  blogObserver.observe(document.body, { childList: true, subtree: true });
 
   // ─── Capture-phase submit interceptor ────────────────────────────────────────
 
