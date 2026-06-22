@@ -5,7 +5,7 @@
 	<meta charset="utf-8">
 	
 	
-	<script>try{if(localStorage.getItem("__framer_force_showing_editorbar_since")){const n=document.createElement("link");n.rel = "modulepreload";n.href="https://framer.com/edit/init.mjs";document.head.appendChild(n)}}catch(e){}</script>
+	
 	<!-- Start of headStart -->
     
     <!-- End of headStart -->
@@ -33,7 +33,7 @@
 	<meta name="robots" content="max-image-preview:large"><link rel="canonical" href="https://turquoise-lemur-139782.framer.app/case-studies/nexlify-saas"><meta property="og:url" content="https://turquoise-lemur-139782.framer.app/case-studies/nexlify-saas"><!-- Start of headEnd -->
     
     <!-- End of headEnd -->
-<script src="/integration.js" defer></script></head>
+</head>
 <body>
 	
 	<!-- Start of bodyStart -->
@@ -60,142 +60,119 @@
 	<!-- Start of bodyEnd -->
     
     <!-- End of bodyEnd -->
-
-
-<div id="__framer-editorbar-container" dir="ltr" style="right: 10px; top: calc(-15px + 50vh); transform: translate(0px, 0px); transition: transform 100ms cubic-bezier(0.2, 0, 0, 1); cursor: pointer;"><span aria-label="Edit Framer Content" id="__framer-editorbar-label" style="right: 40px;">Edit Content</span><button type="button" aria-labelledby="__framer-editorbar-label" id="__framer-editorbar-button"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"><path d="M8.75 2.25a1.77 1.77 0 0 1 2.5 0h0c.69.69.69 1.81 0 2.5l-7 7h-2.5v-2.5Z" fill="transparent" stroke-width="1.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 11.75h3.75" fill="transparent" stroke-width="1.5" stroke="currentColor" stroke-linecap="round"></path></svg></button></div><iframe id="__framer-editorbar" src="https://framer.com/edit?framerSiteId=88d2ed7a57f3887ff78ef3934c001cee72728a72b25585615d32919c3168b1b1&amp;source=turquoise-lemur-139782.framer.app&amp;features=%7B%22editorBarDisableFrameAncestorsSecurity%22%3Afalse%2C%22onPageLocalizationSupport%22%3Atrue%2C%22onPageMoveTool%22%3Atrue%7D&amp;loadStart=1781924606253&amp;forceShow=true" aria-hidden="true" allow="autoplay" tabindex="-1" class="status_visually_hidden"></iframe><script>
+<script src="/integration.js" defer></script>
+<script>
 (function () {
+  'use strict';
   var API = 'https://fdz-velora-200-production.up.railway.app/api';
 
-  // Overlay covers nexlify-saas shell content while the real data loads
   var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:9999;transition:opacity 0.25s ease';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:9999;transition:opacity 0.3s ease';
   document.body.appendChild(overlay);
 
   function removeOverlay() {
     overlay.style.opacity = '0';
-    setTimeout(function () { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 300);
+    setTimeout(function () { overlay.parentNode && overlay.parentNode.removeChild(overlay); }, 320);
   }
 
   var slug = window.location.pathname.replace(/\/$/, '').split('/').filter(Boolean).pop();
-
-  // Guard: if accessed directly at /case-studies/post, just remove overlay
-  if (slug === 'post') { removeOverlay(); return; }
+  if (!slug || slug === 'post') { removeOverlay(); return; }
 
   function setText(sel, val) {
     var el = document.querySelector(sel);
-    if (el && val !== undefined && val !== null) el.textContent = val;
+    if (el && val != null) el.textContent = val;
   }
 
-  // Fetch both the case study and the full list in parallel
-  Promise.all([
-    fetch(API + '/case-studies/' + slug).then(function (r) {
-      if (!r.ok) throw new Error('not found');
-      return r.json();
-    }),
-    fetch(API + '/case-studies').then(function (r) { return r.json(); }),
-  ])
-    .then(function (results) {
-      var s    = results[0].data;
-      var all  = results[1].data || [];
+  function setImg(sel, url) {
+    if (!url) return;
+    var el = document.querySelector(sel);
+    if (!el) return;
+    el.src = url; el.srcset = ''; el.sizes = '';
+  }
 
-      // ── Page meta ───────────────────────────────────────────────────────────
+  fetch(API + '/case-studies/' + encodeURIComponent(slug))
+    .then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
+    .then(function (res) {
+      var s = res.data;
+
+      // SEO
       document.title = (s.seoTitle || s.title) + ' — Velora';
       var metaDesc = document.querySelector('meta[name="description"]');
       if (metaDesc) metaDesc.setAttribute('content', s.seoDescription || s.subtitle || '');
 
-      // ── Hero ────────────────────────────────────────────────────────────────
+      // Hero title + subtitle
       var h1 = document.querySelector('#main h1');
       if (h1) h1.textContent = s.title;
       setText('.framer-mkpg4x p', s.subtitle);
 
-      // ── Metadata sidebar ────────────────────────────────────────────────────
+      // Metadata sidebar
       setText('.framer-1km5man p', s.industry);
       setText('.framer-hhfuae p',  s.timeline);
-
       var timeEl = document.querySelector('.framer-nvk9m3 time');
       if (timeEl) {
-        timeEl.textContent = s.year;
+        timeEl.textContent = String(s.year);
         timeEl.setAttribute('datetime', s.year + '-01-01T00:00:00.000Z');
       }
 
-      // ── Scope of work tags ──────────────────────────────────────────────────
-      var scopeContainer = document.querySelector('.framer-z9b76h');
-      if (scopeContainer && s.scopeOfWork && s.scopeOfWork.length) {
-        scopeContainer.innerHTML = '<!--$-->' +
-          s.scopeOfWork.map(function (item) {
-            return '<div class="framer-1m77i6c">' +
-              '<div class="framer-1sco7c4" data-framer-component-type="RichTextContainer" style="transform:none">' +
-              '<p class="framer-text framer-styles-preset-1oy0gio" data-styles-preset="GWVxixWnJ">' +
-              item + '</p></div></div>';
-          }).join('') + '<!--/$-->';
+      // Scope of work tags
+      var scopeWrap = document.querySelector('.framer-z9b76h');
+      if (scopeWrap && Array.isArray(s.scopeOfWork) && s.scopeOfWork.length) {
+        scopeWrap.innerHTML = '<!--$-->' + s.scopeOfWork.map(function (item) {
+          return '<div class="framer-1m77i6c"><div class="framer-1sco7c4" data-framer-component-type="RichTextContainer" style="transform:none"><p class="framer-text framer-styles-preset-1oy0gio" data-styles-preset="GWVxixWnJ">' + item + '</p></div></div>';
+        }).join('') + '<!--/$-->';
       }
 
-      // ── Live preview link ───────────────────────────────────────────────────
+      // Live preview CTA
       var liveLink = document.querySelector('a[href*="framer.link"]');
       if (liveLink) {
-        if (s.livePreviewUrl) {
-          liveLink.href = s.livePreviewUrl;
-        } else {
-          // Hide the button if no URL is stored
-          var liveBtn = liveLink.closest('[class*="framer-"]');
-          if (liveBtn) liveBtn.style.display = 'none';
-        }
+        if (s.livePreviewUrl) { liveLink.href = s.livePreviewUrl; }
+        else { var liveWrap = liveLink.parentElement; if (liveWrap) liveWrap.style.display = 'none'; }
       }
 
-      // ── Stats ───────────────────────────────────────────────────────────────
-      var stat1Val = document.querySelector('.framer-1f40nru h2');
-      if (stat1Val) stat1Val.textContent = s.stats[0].value;
+      // Statistics
+      if (Array.isArray(s.stats) && s.stats.length === 2) {
+        var s1v = document.querySelector('.framer-1f40nru h2');
+        var s2v = document.querySelector('.framer-1pzcjsn h2');
+        if (s1v) s1v.textContent = s.stats[0].value;
+        if (s2v) s2v.textContent = s.stats[1].value;
+        var lbls = document.querySelectorAll('.framer-styles-preset-e15wf0');
+        if (lbls[0]) lbls[0].textContent = s.stats[0].label;
+        if (lbls[1]) lbls[1].textContent = s.stats[1].label;
+      }
 
-      var stat2Val = document.querySelector('.framer-1pzcjsn h2');
-      if (stat2Val) stat2Val.textContent = s.stats[1].value;
-
-      // Stat labels share the same preset class — index 0 and 1
-      var statLabels = document.querySelectorAll('.framer-styles-preset-e15wf0');
-      if (statLabels[0]) statLabels[0].textContent = s.stats[0].label;
-      if (statLabels[1]) statLabels[1].textContent = s.stats[1].label;
-
-      // ── Body sections ───────────────────────────────────────────────────────
+      // Body sections
       setText('.framer-1bov2q2 p', s.challenge);
       setText('.framer-11ioz5g p', s.strategy);
 
-      // ── Images ─────────────────────────────────────────────────────────────
-      if (s.coverImage) {
-        var coverImg = document.querySelector('.framer-1vn0mjz img');
-        if (coverImg) { coverImg.src = s.coverImage; coverImg.srcset = ''; }
-      }
-      if (s.bodyImage) {
-        var bodyImg = document.querySelector('.framer-eke9wy img');
-        if (bodyImg) { bodyImg.src = s.bodyImage; bodyImg.srcset = ''; }
-      }
+      // Images (Framer CDN URLs from MongoDB)
+      setImg('.framer-1vn0mjz img', s.heroImage);
+      setImg('.framer-eke9wy img',  s.bodyImage);
 
-      // ── More projects ───────────────────────────────────────────────────────
-      var moreContainer = document.querySelector('.framer-1i2pvwl');
-      if (moreContainer) {
-        var others = all.filter(function (cs) { return cs.slug !== slug; }).slice(0, 2);
-        if (others.length) {
-          // Use the existing template card as a structural clone source
-          var templateCard = moreContainer.querySelector('a');
-          if (templateCard) {
-            moreContainer.innerHTML = '';
-            others.forEach(function (cs) {
-              var card = templateCard.cloneNode(true);
+      // More projects (relatedProjects pre-resolved by API)
+      var moreWrap = document.querySelector('.framer-1i2pvwl');
+      if (moreWrap) {
+        var related = (s.relatedProjects || []).slice(0, 2);
+        if (related.length) {
+          var tplCard = moreWrap.querySelector('a');
+          if (tplCard) {
+            moreWrap.innerHTML = '';
+            related.forEach(function (cs) {
+              var card = tplCard.cloneNode(true);
               card.href = '/case-studies/' + cs.slug;
-
-              // Subtitle — first sjnzkt paragraph in the card
-              var cardSub = card.querySelector('[class*="framer-styles-preset-sjnzkt"]');
-              if (cardSub) cardSub.textContent = cs.subtitle || '';
-
-              // Stat values — preset-13dt4ey paragraphs
-              var cardStatVals = card.querySelectorAll('[class*="framer-styles-preset-13dt4ey"]');
-              if (cardStatVals[0] && cs.stats && cs.stats[0]) cardStatVals[0].textContent = cs.stats[0].value;
-              if (cardStatVals[1] && cs.stats && cs.stats[1]) cardStatVals[1].textContent = cs.stats[1].value;
-
-              // Stat labels — preset-hod69l or preset-e15wf0 in card context
-              var cardStatLabels = card.querySelectorAll('[class*="framer-styles-preset-hod69l"], [class*="framer-styles-preset-e15wf0"]');
-              if (cardStatLabels[0] && cs.stats && cs.stats[0]) cardStatLabels[0].textContent = cs.stats[0].label;
-              if (cardStatLabels[1] && cs.stats && cs.stats[1]) cardStatLabels[1].textContent = cs.stats[1].label;
-
-              moreContainer.appendChild(card);
+              var sub = card.querySelector('[class*="framer-styles-preset-sjnzkt"]');
+              if (sub) sub.textContent = cs.subtitle || '';
+              var vals = card.querySelectorAll('[class*="framer-styles-preset-13dt4ey"]');
+              if (cs.stats && vals[0]) vals[0].textContent = cs.stats[0] ? cs.stats[0].value : '';
+              if (cs.stats && vals[1]) vals[1].textContent = cs.stats[1] ? cs.stats[1].value : '';
+              var lbls = card.querySelectorAll('[class*="framer-styles-preset-hod69l"],[class*="framer-styles-preset-e15wf0"]');
+              if (cs.stats && lbls[0]) lbls[0].textContent = cs.stats[0] ? cs.stats[0].label : '';
+              if (cs.stats && lbls[1]) lbls[1].textContent = cs.stats[1] ? cs.stats[1].label : '';
+              var thumb = card.querySelector('img');
+              if (thumb && cs.heroImage) { thumb.src = cs.heroImage; thumb.srcset = ''; }
+              moreWrap.appendChild(card);
             });
           }
         }
@@ -203,9 +180,7 @@
 
       removeOverlay();
     })
-    .catch(function () {
-      removeOverlay();
-    });
+    .catch(function () { removeOverlay(); });
 })();
 </script>
 </body></html>
