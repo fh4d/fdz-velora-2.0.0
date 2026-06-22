@@ -1,5 +1,6 @@
 'use strict';
 
+const mongoose = require('mongoose');
 const CaseStudy = require('../models/CaseStudy');
 const AppError  = require('../utils/AppError');
 
@@ -9,11 +10,28 @@ function buildSlug(raw) {
   return raw.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
-// Returns all case studies (any status, any source) for the admin listing.
+function isValidId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
+}
+
+// Normalise relatedProjects input — accepts [{slug}] or ['slug-string']
+function normaliseRelated(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (typeof item === 'string') return { slug: item.trim() };
+      if (item && typeof item.slug === 'string') return { slug: item.slug.trim() };
+      return null;
+    })
+    .filter((item) => item && item.slug);
+}
+
+// ── Admin: list ───────────────────────────────────────────────────────────────
+// Returns all case studies (any status) for the admin panel list view.
 async function adminListCaseStudies(req, res, next) {
   try {
     const studies = await CaseStudy.find()
-      .select('title slug status source order createdAt updatedAt')
+      .select('title slug status industry year order createdAt updatedAt')
       .sort({ order: 1, createdAt: -1 });
 
     res.status(200).json({ success: true, count: studies.length, data: studies });
@@ -22,7 +40,9 @@ async function adminListCaseStudies(req, res, next) {
   }
 }
 
-// Returns a single case study by slug regardless of status — for the edit form.
+// ── Admin: single ─────────────────────────────────────────────────────────────
+// Returns a full case study by slug regardless of status — used to pre-fill
+// the edit form.
 async function adminGetCaseStudy(req, res, next) {
   try {
     const study = await CaseStudy.findOne({ slug: req.params.slug });
@@ -33,23 +53,25 @@ async function adminGetCaseStudy(req, res, next) {
   }
 }
 
-// Creates a new case study. Source defaults to "mongo"; status defaults to "draft".
+// ── Create ────────────────────────────────────────────────────────────────────
 async function createCaseStudy(req, res, next) {
   try {
     const {
       title, slug, subtitle, industry, timeline, year,
       scopeOfWork, stats, challenge, strategy,
-      livePreviewUrl, coverImage, bodyImage,
-      seoTitle, seoDescription, status, order,
+      livePreviewUrl, heroImage, bodyImage,
+      relatedProjects, seoTitle, seoDescription,
+      status, order,
     } = req.body;
 
-    if (!title?.trim())    return next(new AppError('Title is required', 400));
-    if (!subtitle?.trim()) return next(new AppError('Subtitle is required', 400));
-    if (!industry?.trim()) return next(new AppError('Industry is required', 400));
-    if (!timeline?.trim()) return next(new AppError('Timeline is required', 400));
-    if (!year)             return next(new AppError('Year is required', 400));
+    // Required field guards
+    if (!title?.trim())     return next(new AppError('Title is required', 400));
+    if (!subtitle?.trim())  return next(new AppError('Subtitle is required', 400));
+    if (!industry?.trim())  return next(new AppError('Industry is required', 400));
+    if (!timeline?.trim())  return next(new AppError('Timeline is required', 400));
+    if (!year)              return next(new AppError('Year is required', 400));
     if (!challenge?.trim()) return next(new AppError('Challenge is required', 400));
-    if (!strategy?.trim()) return next(new AppError('Strategy is required', 400));
+    if (!strategy?.trim())  return next(new AppError('Strategy is required', 400));
 
     if (!Array.isArray(scopeOfWork) || scopeOfWork.length < 1) {
       return next(new AppError('At least one scope of work item is required', 400));
@@ -70,24 +92,24 @@ async function createCaseStudy(req, res, next) {
     if (existing) return next(new AppError('A case study with this slug already exists', 409));
 
     const study = await CaseStudy.create({
-      title:          title.trim(),
-      slug:           cleanSlug,
-      subtitle:       subtitle.trim(),
-      industry:       industry.trim(),
-      timeline:       timeline.trim(),
-      year:           Number(year),
-      scopeOfWork:    scopeOfWork.map((s) => s.trim()).filter(Boolean),
-      stats:          stats.map((s) => ({ value: s.value.trim(), label: s.label.trim() })),
-      challenge:      challenge.trim(),
-      strategy:       strategy.trim(),
-      livePreviewUrl: livePreviewUrl?.trim() || undefined,
-      coverImage:     coverImage?.trim()     || undefined,
-      bodyImage:      bodyImage?.trim()      || undefined,
-      seoTitle:       seoTitle?.trim()       || undefined,
-      seoDescription: seoDescription?.trim() || undefined,
-      status:         status === 'published' ? 'published' : 'draft',
-      order:          order !== undefined ? Number(order) : undefined,
-      source:         'mongo',
+      title:           title.trim(),
+      slug:            cleanSlug,
+      subtitle:        subtitle.trim(),
+      industry:        industry.trim(),
+      timeline:        timeline.trim(),
+      year:            Number(year),
+      scopeOfWork:     scopeOfWork.map((s) => s.trim()).filter(Boolean),
+      stats:           stats.map((s) => ({ value: s.value.trim(), label: s.label.trim() })),
+      challenge:       challenge.trim(),
+      strategy:        strategy.trim(),
+      livePreviewUrl:  livePreviewUrl?.trim()  || undefined,
+      heroImage:       heroImage?.trim()       || undefined,
+      bodyImage:       bodyImage?.trim()       || undefined,
+      relatedProjects: normaliseRelated(relatedProjects),
+      seoTitle:        seoTitle?.trim()        || undefined,
+      seoDescription:  seoDescription?.trim()  || undefined,
+      status:          status === 'published'  ? 'published' : 'draft',
+      order:           order !== undefined     ? Number(order) : undefined,
     });
 
     res.status(201).json({ success: true, data: study });
@@ -96,18 +118,23 @@ async function createCaseStudy(req, res, next) {
   }
 }
 
-// Updates an existing case study. Slug cannot be changed.
-// All fields are optional — only supplied fields are updated.
+// ── Update ────────────────────────────────────────────────────────────────────
+// Identified by MongoDB _id. Slug is immutable — changing it would break URLs.
 async function updateCaseStudy(req, res, next) {
   try {
-    const existing = await CaseStudy.findOne({ slug: req.params.slug });
+    if (!isValidId(req.params.id)) {
+      return next(new AppError('Invalid case study id', 400));
+    }
+
+    const existing = await CaseStudy.findById(req.params.id);
     if (!existing) return next(new AppError('Case study not found', 404));
 
     const {
       title, subtitle, industry, timeline, year,
       scopeOfWork, stats, challenge, strategy,
-      livePreviewUrl, coverImage, bodyImage,
-      seoTitle, seoDescription, status, order,
+      livePreviewUrl, heroImage, bodyImage,
+      relatedProjects, seoTitle, seoDescription,
+      status, order,
     } = req.body;
 
     if (stats !== undefined) {
@@ -128,25 +155,26 @@ async function updateCaseStudy(req, res, next) {
     }
 
     const updates = {};
-    if (title !== undefined)          updates.title          = title.trim();
-    if (subtitle !== undefined)       updates.subtitle       = subtitle.trim();
-    if (industry !== undefined)       updates.industry       = industry.trim();
-    if (timeline !== undefined)       updates.timeline       = timeline.trim();
-    if (year !== undefined)           updates.year           = Number(year);
-    if (challenge !== undefined)      updates.challenge      = challenge.trim();
-    if (strategy !== undefined)       updates.strategy       = strategy.trim();
-    if (livePreviewUrl !== undefined) updates.livePreviewUrl = livePreviewUrl.trim() || undefined;
-    if (coverImage !== undefined)     updates.coverImage     = coverImage.trim()     || undefined;
-    if (bodyImage !== undefined)      updates.bodyImage      = bodyImage.trim()      || undefined;
-    if (seoTitle !== undefined)       updates.seoTitle       = seoTitle.trim()       || undefined;
-    if (seoDescription !== undefined) updates.seoDescription = seoDescription.trim() || undefined;
-    if (status !== undefined)         updates.status         = status;
-    if (order !== undefined)          updates.order          = Number(order);
-    if (scopeOfWork !== undefined)    updates.scopeOfWork    = scopeOfWork.map((s) => s.trim()).filter(Boolean);
-    if (stats !== undefined)          updates.stats          = stats.map((s) => ({ value: s.value.trim(), label: s.label.trim() }));
+    if (title !== undefined)           updates.title           = title.trim();
+    if (subtitle !== undefined)        updates.subtitle        = subtitle.trim();
+    if (industry !== undefined)        updates.industry        = industry.trim();
+    if (timeline !== undefined)        updates.timeline        = timeline.trim();
+    if (year !== undefined)            updates.year            = Number(year);
+    if (challenge !== undefined)       updates.challenge       = challenge.trim();
+    if (strategy !== undefined)        updates.strategy        = strategy.trim();
+    if (livePreviewUrl !== undefined)  updates.livePreviewUrl  = livePreviewUrl.trim()  || undefined;
+    if (heroImage !== undefined)       updates.heroImage       = heroImage.trim()       || undefined;
+    if (bodyImage !== undefined)       updates.bodyImage       = bodyImage.trim()       || undefined;
+    if (seoTitle !== undefined)        updates.seoTitle        = seoTitle.trim()        || undefined;
+    if (seoDescription !== undefined)  updates.seoDescription  = seoDescription.trim()  || undefined;
+    if (status !== undefined)          updates.status          = status;
+    if (order !== undefined)           updates.order           = Number(order);
+    if (scopeOfWork !== undefined)     updates.scopeOfWork     = scopeOfWork.map((s) => s.trim()).filter(Boolean);
+    if (stats !== undefined)           updates.stats           = stats.map((s) => ({ value: s.value.trim(), label: s.label.trim() }));
+    if (relatedProjects !== undefined) updates.relatedProjects = normaliseRelated(relatedProjects);
 
-    const updated = await CaseStudy.findOneAndUpdate(
-      { slug: req.params.slug },
+    const updated = await CaseStudy.findByIdAndUpdate(
+      req.params.id,
       updates,
       { new: true, runValidators: true }
     );
@@ -157,7 +185,7 @@ async function updateCaseStudy(req, res, next) {
   }
 }
 
-// Toggles status between draft and published.
+// ── Toggle status ─────────────────────────────────────────────────────────────
 async function toggleStatus(req, res, next) {
   try {
     const study = await CaseStudy.findOne({ slug: req.params.slug });
@@ -172,25 +200,17 @@ async function toggleStatus(req, res, next) {
   }
 }
 
-// Deletes a case study. Blocked for source = "static" — static-origin records
-// are protected until the static HTML files are manually decommissioned.
+// ── Delete ────────────────────────────────────────────────────────────────────
+// Identified by MongoDB _id.
 async function deleteCaseStudy(req, res, next) {
   try {
-    const study = await CaseStudy.findOne({ slug: req.params.slug });
-    if (!study) return next(new AppError('Case study not found', 404));
-
-    if (study.source === 'static') {
-      return next(
-        new AppError(
-          'Cannot delete a static-origin case study via the API. ' +
-          'Remove the static HTML file and update vercel.json first, ' +
-          'then change source to "mongo" before deleting.',
-          403
-        )
-      );
+    if (!isValidId(req.params.id)) {
+      return next(new AppError('Invalid case study id', 400));
     }
 
-    await study.deleteOne();
+    const study = await CaseStudy.findByIdAndDelete(req.params.id);
+    if (!study) return next(new AppError('Case study not found', 404));
+
     res.status(200).json({ success: true, message: 'Case study deleted' });
   } catch (err) {
     next(err);
