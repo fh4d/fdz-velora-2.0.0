@@ -7,7 +7,7 @@
   //              Replace the Railway URL below before deploying.
   var API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:4000/api'
-    : 'https://YOUR_RAILWAY_URL.railway.app/api'; // ← replace with real Railway URL
+    : 'https://fdz-velora-200-production.up.railway.app/api';
 
   var IS_DEV = window.location.hostname === 'localhost' ||
                window.location.hostname === '127.0.0.1';
