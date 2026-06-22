@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk 'NR==52' \"C:/Users/Admin/Desktop/fdz2.0/index.html\")",
+      "Bash(grep -oE '<form[^>]*>.{0,3500}')",
+      "Bash(ls \"C:/Users/Admin/Desktop/\" | grep -E 'fdz|velora|FDZ' -i)"
+    ]
+  }
+}
