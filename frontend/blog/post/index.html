@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<link rel="stylesheet" href="/styles.css">
+<link href="/assets/images/image-extra-1.png" rel="icon" media="(prefers-color-scheme: light)">
+<link href="/assets/images/image-extra-2.png" rel="icon" media="(prefers-color-scheme: dark)">
+<title id="page-title">Loading... — Velora</title>
+<meta name="description" id="page-desc" content="">
+<script src="/integration.js" defer></script>
+<style>
+  #fdz-post-wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 80px 24px 120px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #171717;
+  }
+
+  #fdz-post-wrap .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #737373;
+    text-decoration: none;
+    margin-bottom: 40px;
+    transition: color 0.15s;
+  }
+  #fdz-post-wrap .back-link:hover { color: #171717; }
+
+  #fdz-post-wrap .post-tag {
+    display: inline-block;
+    background: #fe3f01;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+  }
+
+  #fdz-post-wrap h1 {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #0a0a0a;
+    margin-bottom: 16px;
+  }
+
+  #fdz-post-wrap .post-meta {
+    font-size: 13px;
+    color: #737373;
+    margin-bottom: 40px;
+  }
+
+  #fdz-post-wrap .cover-img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 48px;
+    display: block;
+  }
+
+  #fdz-post-wrap .post-body {
+    font-size: 17px;
+    line-height: 1.8;
+    color: #262626;
+  }
+
+  #fdz-post-wrap .post-body p  { margin-bottom: 24px; }
+  #fdz-post-wrap .post-body h2 { font-size: 24px; font-weight: 700; margin: 40px 0 16px; color: #0a0a0a; }
+  #fdz-post-wrap .post-body h3 { font-size: 19px; font-weight: 700; margin: 32px 0 12px; color: #0a0a0a; }
+  #fdz-post-wrap .post-body ul, #fdz-post-wrap .post-body ol { padding-left: 24px; margin-bottom: 24px; }
+  #fdz-post-wrap .post-body li { margin-bottom: 8px; }
+  #fdz-post-wrap .post-body a  { color: #fe3f01; text-decoration: none; }
+  #fdz-post-wrap .post-body a:hover { text-decoration: underline; }
+  #fdz-post-wrap .post-body blockquote {
+    border-left: 3px solid #fe3f01;
+    padding-left: 20px;
+    margin: 32px 0;
+    color: #525252;
+    font-style: italic;
+  }
+
+  #fdz-not-found, #fdz-loading {
+    text-align: center;
+    padding: 120px 24px;
+    color: #737373;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  #fdz-not-found h2 { font-size: 20px; color: #171717; margin-bottom: 8px; }
+  #fdz-not-found a  { color: #fe3f01; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div id="fdz-loading" style="text-align:center;padding:120px 24px;font-family:sans-serif;color:#737373;">
+  Loading post...
+</div>
+
+<div id="fdz-post-wrap" style="display:none;">
+  <a class="back-link" href="/blog">← Back to Blog</a>
+  <div class="post-tag">Insights</div>
+  <h1 id="fdz-title"></h1>
+  <div class="post-meta" id="fdz-meta"></div>
+  <img id="fdz-cover" class="cover-img" src="" alt="" style="display:none;">
+  <div class="post-body" id="fdz-body"></div>
+</div>
+
+<div id="fdz-not-found" style="display:none;">
+  <h2>Post not found</h2>
+  <p>This post doesn't exist or has been removed. <a href="/blog">Back to Blog</a></p>
+</div>
+
+<script>
+(function () {
+  var API = 'https://fdz-velora-200-production.up.railway.app/api';
+
+  var slug = window.location.pathname
+    .replace(/\/$/, '')
+    .split('/')
+    .filter(Boolean)
+    .pop();
+
+  function formatDate(iso) {
+    try { return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); }
+    catch (e) { return ''; }
+  }
+
+  function nl2p(text) {
+    // If content already has HTML tags, render as-is
+    if (/<[a-z][\s\S]*>/i.test(text)) return text;
+    // Otherwise convert newlines to paragraphs
+    return text.split(/\n\n+/).map(function (p) {
+      return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+  }
+
+  fetch(API + '/blog/' + slug)
+    .then(function (res) {
+      if (!res.ok) throw new Error('not found');
+      return res.json();
+    })
+    .then(function (result) {
+      var post = result.data;
+
+      document.getElementById('page-title').textContent = (post.seoTitle || post.title) + ' — Velora';
+      document.getElementById('page-desc').setAttribute('content', post.seoDescription || post.excerpt || '');
+
+      document.getElementById('fdz-title').textContent = post.title;
+      document.getElementById('fdz-meta').textContent  = formatDate(post.createdAt);
+
+      if (post.coverImage) {
+        var img = document.getElementById('fdz-cover');
+        img.src = post.coverImage;
+        img.style.display = 'block';
+      }
+
+      document.getElementById('fdz-body').innerHTML = nl2p(post.content);
+
+      document.getElementById('fdz-loading').style.display  = 'none';
+      document.getElementById('fdz-post-wrap').style.display = 'block';
+    })
+    .catch(function () {
+      document.getElementById('fdz-loading').style.display  = 'none';
+      document.getElementById('fdz-not-found').style.display = 'block';
+    });
+})();
+</script>
+</body>
+</html>
