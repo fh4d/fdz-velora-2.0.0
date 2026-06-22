@@ -213,17 +213,21 @@
       });
   }
 
-  // Force full page reload for case study links so Vercel serves the SSR HTML
-  // (Framer's SPA navigation bypasses it, causing blank screens from CMS parse errors)
+  // Force full page reload for case study links so Vercel serves the correct template.
+  // Framer's SPA router intercepts clicks and crashes on corrupted CMS binary data.
+  // Cards use relative hrefs (./nexlify-saas), so we resolve via a.href (absolute).
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a[href]');
     if (!a) return;
-    var href = a.getAttribute('href');
-    if (href && href.startsWith('/case-studies/') && href !== '/case-studies') {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      window.location.href = href;
-    }
+    var resolved = a.href; // browser-resolved absolute URL
+    try {
+      var url = new URL(resolved);
+      if (url.pathname.startsWith('/case-studies/') && url.pathname !== '/case-studies') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        window.location.href = url.pathname;
+      }
+    } catch (err) { /* non-parseable href — ignore */ }
   }, true);
 
   // Watch for the blog container to appear in the DOM (handles Framer SPA nav)
