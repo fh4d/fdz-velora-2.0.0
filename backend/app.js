@@ -13,6 +13,7 @@ const healthRouter       = require('./routes/health');
 const contactRouter      = require('./routes/contact');
 const newsletterRouter   = require('./routes/newsletter');
 const blogRouter         = require('./routes/blog');
+const caseStudiesRouter  = require('./routes/caseStudies');
 const adminRouter        = require('./routes/admin');
 
 const app = express();
@@ -30,7 +31,7 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(
   cors({
     origin: config.frontendUrl,
-    methods: ['GET', 'POST', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'x-admin-password'],
   })
 );
@@ -46,8 +47,9 @@ app.use(globalLimiter);
 app.use('/health',         healthRouter);
 app.use('/api/contact',    contactRouter);
 app.use('/api/newsletter', newsletterRouter);
-app.use('/api/blog',       blogRouter);
-app.use('/admin',          adminRouter);
+app.use('/api/blog',          blogRouter);
+app.use('/api/case-studies', caseStudiesRouter);
+app.use('/admin',             adminRouter);
 
 // ─── 7. 404 ───────────────────────────────────────────────────────────────────
 // Frontend is served by Vercel — Express handles API routes only.
