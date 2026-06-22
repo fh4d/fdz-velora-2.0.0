@@ -213,6 +213,19 @@
       });
   }
 
+  // Force full page reload for case study links so Vercel serves the SSR HTML
+  // (Framer's SPA navigation bypasses it, causing blank screens from CMS parse errors)
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href && href.startsWith('/case-studies/') && href !== '/case-studies') {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.location.href = href;
+    }
+  }, true);
+
   // Watch for the blog container to appear in the DOM (handles Framer SPA nav)
   var blogObserver = new MutationObserver(function () {
     var pathname = window.location.pathname.replace(/\/$/, '') || '/';
