@@ -197,8 +197,14 @@
         var container = document.querySelector('.framer-1ur6je4');
         if (!container) return;
 
+        // Remove previously injected cards before re-injecting
+        var existing = container.querySelectorAll('.fdz-mongo-card');
+        existing.forEach(function (el) { el.parentNode.removeChild(el); });
+
         result.data.forEach(function (post) {
-          container.appendChild(buildCard(post));
+          var card = buildCard(post);
+          card.classList.add('fdz-mongo-card');
+          container.appendChild(card);
         });
         log('Injected ' + result.data.length + ' MongoDB blog post(s)');
       })
@@ -207,8 +213,18 @@
       });
   }
 
-  // Run after Framer hydrates (it uses a MessagePort/worker, so we wait for load)
+  // Run on initial load and on every client-side navigation Framer performs
   window.addEventListener('load', injectMongoBlogPosts);
+
+  // Framer's router uses history.pushState — intercept it to re-run on navigation
+  var _pushState = history.pushState.bind(history);
+  history.pushState = function () {
+    _pushState.apply(history, arguments);
+    setTimeout(injectMongoBlogPosts, 300);
+  };
+  window.addEventListener('popstate', function () {
+    setTimeout(injectMongoBlogPosts, 300);
+  });
 
   // ─── Capture-phase submit interceptor ────────────────────────────────────────
 
