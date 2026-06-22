@@ -2,6 +2,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/blog/:slug", "destination": "/blog/post" }
+    {
+      "source": "/blog/:slug((?!turning-social-platforms-into-scalable-growth-channels|the-growth-systems-behind-high-performing-marketing-campaigns|why-strong-branding-is-the-foundation-of-every-successful-business).*)",
+      "destination": "/blog/post"
+    }
   ]
 }
