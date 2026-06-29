@@ -214,55 +214,107 @@
   }
 
   // ─── Case Studies: inject MongoDB cards on /case-studies ──────────────────────
-  // Mirrors the blog injection pattern exactly. Container: .framer-m0p3pe
-  // Cards are non-navigable (no detail pages) — href="#" prevents any routing.
+  // Container: .framer-m0p3pe
+  // Card template extracted from the exact Framer HTML in case-studies/index.html.
+  // All Framer classes preserved — CSS hover animations work identically.
+  // Cards link to /book-a-call; click interceptor below hard-navigates via
+  // window.location.href to bypass Framer's SPA router.
+
+  // Inject animation + shimmer CSS once (idempotent)
+  (function injectCsStyles() {
+    if (document.getElementById('fdz-cs-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'fdz-cs-styles';
+    s.textContent = [
+      // Entrance animation — matches Framer's spring (cubic-bezier(0.22,1,0.36,1))
+      '@keyframes fdzCsFadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}',
+      '.fdz-cs-card{animation:fdzCsFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both}',
+      // Stagger delays for up to 8 cards
+      '.fdz-cs-card:nth-child(1){animation-delay:0.00s}',
+      '.fdz-cs-card:nth-child(2){animation-delay:0.08s}',
+      '.fdz-cs-card:nth-child(3){animation-delay:0.16s}',
+      '.fdz-cs-card:nth-child(4){animation-delay:0.24s}',
+      '.fdz-cs-card:nth-child(5){animation-delay:0.32s}',
+      '.fdz-cs-card:nth-child(6){animation-delay:0.40s}',
+      '.fdz-cs-card:nth-child(7){animation-delay:0.48s}',
+      '.fdz-cs-card:nth-child(8){animation-delay:0.56s}',
+      // Shimmer on empty grid container (shows while fetch is in flight)
+      '@keyframes fdzShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}',
+      '.fdz-cs-loading{min-height:480px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:fdzShimmer 1.4s ease infinite;border-radius:8px}',
+    ].join('');
+    document.head.appendChild(s);
+  })();
 
   function buildCaseStudyCard(study) {
+    // Exact Framer card HTML structure — preserves all class names so
+    // CSS hover animations (arrow, image scale, overlay) work without any JS.
     var img = study.heroImage
-      ? '<img src="' + study.heroImage + '" alt="' + (study.title || '') + '" style="display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;">'
-      : '<div style="width:100%;height:100%;background:#e5e5e5;"></div>';
+      ? '<img src="' + study.heroImage + '" alt="' + (study.title || '').replace(/"/g, '&quot;') + '" loading="lazy" style="display:block;width:100%;height:100%;border-radius:inherit;object-position:center;object-fit:cover;">'
+      : '<div style="width:100%;height:100%;background:var(--token-c42c6532-5e43-498f-83ed-eac9f5bec719,rgb(245,245,245));"></div>';
 
     var stat1Val   = (study.stats && study.stats[0]) ? study.stats[0].value : '';
     var stat1Label = (study.stats && study.stats[0]) ? study.stats[0].label : '';
     var stat2Val   = (study.stats && study.stats[1]) ? study.stats[1].value : '';
     var stat2Label = (study.stats && study.stats[1]) ? study.stats[1].label : '';
 
-    var el = document.createElement('div');
+    // <a> wrapper — href to /book-a-call; hard-navigated by click interceptor below
+    var el = document.createElement('a');
     el.className = 'framer-c52rlm framer-1f1vvtm fdz-cs-card';
+    el.href      = '/book-a-call';
     el.innerHTML =
       '<div class="ssr-variant">' +
         '<div class="framer-ubrkdy-container">' +
-          '<div class="framer-EhvmC framer-Oe1cm framer-HhvlY framer-1v3z982 framer-v-1v3z982">' +
-            '<div class="framer-1wc3ts0">' +
-              '<div class="framer-1anxayh"></div>' +
-              '<div class="framer-1ihf2qm">' +
-                '<div data-framer-background-image-wrapper="true" style="position:absolute;border-radius:inherit;inset:0px;">' +
+          '<div class="framer-EhvmC framer-Oe1cm framer-HhvlY framer-1v3z982 framer-v-1v3z982" data-framer-name="Variant 1" style="background-color:var(--token-ba7a9dfd-3e1d-4dea-a25f-9a0d49d43ddf,rgb(250,250,250));width:100%;border-radius:6px;opacity:1;">' +
+            '<div class="framer-1wc3ts0" style="border-radius:6px;opacity:1;">' +
+              // Top logo area — left empty for MongoDB cards (no logo in schema)
+              '<div class="framer-1anxayh" style="opacity:1;"></div>' +
+              // Thumbnail image
+              '<div class="framer-1ihf2qm" style="filter:grayscale(0);transform:none;opacity:1;">' +
+                '<div style="position:absolute;border-radius:inherit;top:0;right:0;bottom:0;left:0;" data-framer-background-image-wrapper="true">' +
                   img +
                 '</div>' +
+                // Grain overlay — matches original exactly
+                '<div class="framer-1fy171d-container" style="opacity:1;"><!--$-->' +
+                  '<div style="width:100%;height:100%;position:relative;overflow:hidden">' +
+                    '<div style="background:url(\'assets/images/variant-1-63.png\');background-size:50px 50px;background-repeat:repeat;position:absolute;inset:-200%;width:400%;height:400%;opacity:0.17"></div>' +
+                  '</div>' +
+                '<!--/$--></div>' +
               '</div>' +
             '</div>' +
-            '<div class="framer-894e3e">' +
-              '<div class="framer-7x558y">' +
-                '<div class="framer-jysi4e"></div>' +
-                '<div class="framer-u3bmyl" data-framer-component-type="RichTextContainer">' +
-                  '<p class="framer-text framer-styles-preset-1oy0gio" dir="auto">' + (study.subtitle || '') + '</p>' +
+            '<div class="framer-894e3e" style="opacity:1;">' +
+              '<div class="framer-7x558y" style="opacity:1;">' +
+                // Bottom logo area — empty for MongoDB cards
+                '<div class="framer-jysi4e" style="opacity:1;"></div>' +
+                // Subtitle / description
+                '<div class="framer-u3bmyl" data-framer-component-type="RichTextContainer" style="transform:none;opacity:1;">' +
+                  '<p class="framer-text framer-styles-preset-1oy0gio" data-styles-preset="GWVxixWnJ" dir="auto">' + (study.subtitle || '') + '</p>' +
                 '</div>' +
               '</div>' +
-              '<div class="framer-1asb1rw">' +
-                '<div class="framer-148mbbl">' +
-                  '<div class="framer-jvp2kh" data-framer-component-type="RichTextContainer">' +
-                    '<p class="framer-text framer-styles-preset-e15wf0" dir="auto">' + stat1Val + '</p>' +
+              '<div class="framer-1asb1rw" style="opacity:1;">' +
+                // Stat 1
+                '<div class="framer-148mbbl" style="background-color:var(--token-c42c6532-5e43-498f-83ed-eac9f5bec719,rgb(245,245,245));border-radius:4px;opacity:1;">' +
+                  '<div class="framer-jvp2kh" data-framer-component-type="RichTextContainer" style="transform:none;opacity:1;">' +
+                    '<p class="framer-text framer-styles-preset-e15wf0" data-styles-preset="re7NuBg7S" dir="auto">' + stat1Val + '</p>' +
                   '</div>' +
-                  '<div class="framer-28ay0p" data-framer-component-type="RichTextContainer">' +
-                    '<p class="framer-text framer-styles-preset-1oy0gio" dir="auto">' + stat1Label + '</p>' +
+                  '<div class="framer-28ay0p" data-framer-component-type="RichTextContainer" style="--extracted-r6o4lv:var(--token-d224a75c-f8d5-4d92-879a-a5362c414257,rgb(115,115,115));transform:none;opacity:1;">' +
+                    '<p class="framer-text framer-styles-preset-1oy0gio" data-styles-preset="GWVxixWnJ" dir="auto" style="--framer-text-color:var(--extracted-r6o4lv,rgb(115,115,115))">' + stat1Label + '</p>' +
                   '</div>' +
                 '</div>' +
-                '<div class="framer-blpzw4">' +
-                  '<div class="framer-1h2c6bg" data-framer-component-type="RichTextContainer">' +
-                    '<p class="framer-text framer-styles-preset-e15wf0" dir="auto">' + stat2Val + '</p>' +
+                // Stat 2
+                '<div class="framer-blpzw4" style="background-color:var(--token-c42c6532-5e43-498f-83ed-eac9f5bec719,rgb(245,245,245));border-radius:6px;opacity:1;">' +
+                  '<div class="framer-1h2c6bg" data-framer-component-type="RichTextContainer" style="transform:none;opacity:1;">' +
+                    '<p class="framer-text framer-styles-preset-e15wf0" data-styles-preset="re7NuBg7S" dir="auto">' + stat2Val + '</p>' +
                   '</div>' +
-                  '<div class="framer-1ymqgaw" data-framer-component-type="RichTextContainer">' +
-                    '<p class="framer-text framer-styles-preset-1oy0gio" dir="auto">' + stat2Label + '</p>' +
+                  '<div class="framer-1ymqgaw" data-framer-component-type="RichTextContainer" style="--extracted-r6o4lv:var(--token-d224a75c-f8d5-4d92-879a-a5362c414257,rgb(115,115,115));transform:none;opacity:1;">' +
+                    '<p class="framer-text framer-styles-preset-1oy0gio" data-styles-preset="GWVxixWnJ" dir="auto" style="--framer-text-color:var(--extracted-r6o4lv,rgb(115,115,115))">' + stat2Label + '</p>' +
+                  '</div>' +
+                '</div>' +
+                // Arrow button — references SVG sprite already in page DOM
+                '<div class="framer-jl21ws" style="background-color:var(--token-02f86556-091d-4bb0-8fec-70a0faea2fb2,rgb(254,63,1));border-radius:4px;opacity:1;">' +
+                  '<div data-framer-component-type="SVG" class="framer-fjt335" aria-hidden="true" style="image-rendering:pixelated;flex-shrink:0;opacity:1;">' +
+                    '<div class="svgContainer" style="width:100%;height:100%;aspect-ratio:inherit">' +
+                      '<svg style="width:100%;height:100%;overflow:visible;" preserveAspectRatio="none" width="100%" height="100%"><use href="#svg2058856773_653"></use></svg>' +
+                    '</div>' +
                   '</div>' +
                 '</div>' +
               '</div>' +
@@ -277,42 +329,64 @@
     var pathname = window.location.pathname.replace(/\/$/, '') || '/';
     if (pathname !== '/case-studies') return;
 
+    var container = document.querySelector('.framer-m0p3pe');
+    if (!container) return;
+
+    // Show shimmer while fetch is in flight (Risk 2 fix)
+    container.classList.add('fdz-cs-loading');
+
     fetch(API_BASE + '/case-studies')
       .then(function (res) { return res.json(); })
       .then(function (result) {
-        if (!result.success || !result.data || result.data.length === 0) return;
+        container.classList.remove('fdz-cs-loading');
 
-        var container = document.querySelector('.framer-m0p3pe');
-        if (!container) return;
+        // Wipe ALL framer-c52rlm cards — both static Framer ones and previously
+        // injected MongoDB ones. This handles re-export regressions (Risk 7 fix)
+        // and prevents duplicates on SPA re-navigation.
+        container.querySelectorAll('.framer-c52rlm').forEach(function (el) {
+          el.parentNode.removeChild(el);
+        });
 
-        // Remove previously injected cards before re-injecting
-        var existing = container.querySelectorAll('.fdz-cs-card');
-        existing.forEach(function (el) { el.parentNode.removeChild(el); });
+        // Empty state (Risk 6 fix)
+        if (!result.success || !result.data || result.data.length === 0) {
+          var empty = document.createElement('div');
+          empty.style.cssText = 'padding:60px 24px;text-align:center;width:100%;color:var(--token-d224a75c-f8d5-4d92-879a-a5362c414257,rgb(115,115,115));';
+          empty.innerHTML = '<p class="framer-text framer-styles-preset-1oy0gio" dir="auto">No projects yet — check back soon.</p>';
+          container.appendChild(empty);
+          return;
+        }
 
         result.data.forEach(function (study) {
-          var card = buildCaseStudyCard(study);
-          container.appendChild(card);
+          container.appendChild(buildCaseStudyCard(study));
         });
         log('Injected ' + result.data.length + ' MongoDB case study card(s)');
       })
       .catch(function () {
+        container.classList.remove('fdz-cs-loading');
         log('Case studies fetch failed — skipping injection');
       });
   }
 
-  // Block navigation into case study detail slugs — no detail pages exist
-  // The existing Framer cards link to ./case-studies/slug which would 404
+  // Case study card clicks → hard-navigate to /book-a-call.
+  // Uses window.location.href (not router push) to bypass Framer's SPA router
+  // entirely, preventing blank-page from React/Framer intercepting internal links.
+  // Covers both: original Framer cards (href=./case-studies/slug) and MongoDB
+  // cards (href=/book-a-call that Framer's router might try to handle).
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a[href]');
     if (!a) return;
-    var resolved = a.href;
     try {
-      var url = new URL(resolved);
-      if (url.pathname.startsWith('/case-studies/') && url.pathname !== '/case-studies') {
+      var url = new URL(a.href);
+      // Any click on /case-studies/:slug or /book-a-call from a case study card
+      if (
+        (url.pathname.startsWith('/case-studies/') && url.pathname !== '/case-studies') ||
+        (url.pathname === '/book-a-call' && a.classList.contains('fdz-cs-card'))
+      ) {
         e.preventDefault();
         e.stopImmediatePropagation();
+        window.location.href = '/book-a-call';
       }
-    } catch (err) { /* ignore */ }
+    } catch (err) { /* ignore non-parseable hrefs */ }
   }, true);
 
   // Watch for the blog container to appear in the DOM (handles Framer SPA nav)
