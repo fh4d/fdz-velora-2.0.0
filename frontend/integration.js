@@ -213,21 +213,106 @@
       });
   }
 
-  // Force full page reload for case study links so Vercel serves the correct template.
-  // Framer's SPA router intercepts clicks and crashes on corrupted CMS binary data.
-  // Cards use relative hrefs (./nexlify-saas), so we resolve via a.href (absolute).
+  // ─── Case Studies: inject MongoDB cards on /case-studies ──────────────────────
+  // Mirrors the blog injection pattern exactly. Container: .framer-m0p3pe
+  // Cards are non-navigable (no detail pages) — href="#" prevents any routing.
+
+  function buildCaseStudyCard(study) {
+    var img = study.heroImage
+      ? '<img src="' + study.heroImage + '" alt="' + (study.title || '') + '" style="display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit;">'
+      : '<div style="width:100%;height:100%;background:#e5e5e5;"></div>';
+
+    var stat1Val   = (study.stats && study.stats[0]) ? study.stats[0].value : '';
+    var stat1Label = (study.stats && study.stats[0]) ? study.stats[0].label : '';
+    var stat2Val   = (study.stats && study.stats[1]) ? study.stats[1].value : '';
+    var stat2Label = (study.stats && study.stats[1]) ? study.stats[1].label : '';
+
+    var el = document.createElement('div');
+    el.className = 'framer-c52rlm framer-1f1vvtm fdz-cs-card';
+    el.innerHTML =
+      '<div class="ssr-variant">' +
+        '<div class="framer-ubrkdy-container">' +
+          '<div class="framer-EhvmC framer-Oe1cm framer-HhvlY framer-1v3z982 framer-v-1v3z982">' +
+            '<div class="framer-1wc3ts0">' +
+              '<div class="framer-1anxayh"></div>' +
+              '<div class="framer-1ihf2qm">' +
+                '<div data-framer-background-image-wrapper="true" style="position:absolute;border-radius:inherit;inset:0px;">' +
+                  img +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="framer-894e3e">' +
+              '<div class="framer-7x558y">' +
+                '<div class="framer-jysi4e"></div>' +
+                '<div class="framer-u3bmyl" data-framer-component-type="RichTextContainer">' +
+                  '<p class="framer-text framer-styles-preset-1oy0gio" dir="auto">' + (study.subtitle || '') + '</p>' +
+                '</div>' +
+              '</div>' +
+              '<div class="framer-1asb1rw">' +
+                '<div class="framer-148mbbl">' +
+                  '<div class="framer-jvp2kh" data-framer-component-type="RichTextContainer">' +
+                    '<p class="framer-text framer-styles-preset-e15wf0" dir="auto">' + stat1Val + '</p>' +
+                  '</div>' +
+                  '<div class="framer-28ay0p" data-framer-component-type="RichTextContainer">' +
+                    '<p class="framer-text framer-styles-preset-1oy0gio" dir="auto">' + stat1Label + '</p>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="framer-blpzw4">' +
+                  '<div class="framer-1h2c6bg" data-framer-component-type="RichTextContainer">' +
+                    '<p class="framer-text framer-styles-preset-e15wf0" dir="auto">' + stat2Val + '</p>' +
+                  '</div>' +
+                  '<div class="framer-1ymqgaw" data-framer-component-type="RichTextContainer">' +
+                    '<p class="framer-text framer-styles-preset-1oy0gio" dir="auto">' + stat2Label + '</p>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    return el;
+  }
+
+  function injectMongoCaseStudies() {
+    var pathname = window.location.pathname.replace(/\/$/, '') || '/';
+    if (pathname !== '/case-studies') return;
+
+    fetch(API_BASE + '/case-studies')
+      .then(function (res) { return res.json(); })
+      .then(function (result) {
+        if (!result.success || !result.data || result.data.length === 0) return;
+
+        var container = document.querySelector('.framer-m0p3pe');
+        if (!container) return;
+
+        // Remove previously injected cards before re-injecting
+        var existing = container.querySelectorAll('.fdz-cs-card');
+        existing.forEach(function (el) { el.parentNode.removeChild(el); });
+
+        result.data.forEach(function (study) {
+          var card = buildCaseStudyCard(study);
+          container.appendChild(card);
+        });
+        log('Injected ' + result.data.length + ' MongoDB case study card(s)');
+      })
+      .catch(function () {
+        log('Case studies fetch failed — skipping injection');
+      });
+  }
+
+  // Block navigation into case study detail slugs — no detail pages exist
+  // The existing Framer cards link to ./case-studies/slug which would 404
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a[href]');
     if (!a) return;
-    var resolved = a.href; // browser-resolved absolute URL
+    var resolved = a.href;
     try {
       var url = new URL(resolved);
       if (url.pathname.startsWith('/case-studies/') && url.pathname !== '/case-studies') {
         e.preventDefault();
         e.stopImmediatePropagation();
-        window.location.href = url.pathname;
       }
-    } catch (err) { /* non-parseable href — ignore */ }
+    } catch (err) { /* ignore */ }
   }, true);
 
   // Watch for the blog container to appear in the DOM (handles Framer SPA nav)
@@ -241,6 +326,18 @@
   });
 
   blogObserver.observe(document.body, { childList: true, subtree: true });
+
+  // Watch for the case studies grid to appear (handles Framer SPA nav)
+  var csObserver = new MutationObserver(function () {
+    var pathname = window.location.pathname.replace(/\/$/, '') || '/';
+    if (pathname !== '/case-studies') return;
+    var container = document.querySelector('.framer-m0p3pe');
+    if (!container) return;
+    if (container.querySelector('.fdz-cs-card')) return; // already injected
+    injectMongoCaseStudies();
+  });
+
+  csObserver.observe(document.body, { childList: true, subtree: true });
 
   // ─── Capture-phase submit interceptor ────────────────────────────────────────
 
