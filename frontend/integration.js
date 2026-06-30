@@ -252,6 +252,10 @@
       ? '<img src="' + study.heroImage + '" alt="' + (study.title || '').replace(/"/g, '&quot;') + '" loading="lazy" style="display:block;width:100%;height:100%;border-radius:inherit;object-position:center;object-fit:cover;">'
       : '<div style="width:100%;height:100%;background:var(--token-c42c6532-5e43-498f-83ed-eac9f5bec719,rgb(245,245,245));"></div>';
 
+    var logoImg = study.logo
+      ? '<img src="' + study.logo + '" alt="" loading="lazy" style="display:block;width:100%;height:100%;object-fit:contain;">'
+      : '';
+
     var stat1Val   = (study.stats && study.stats[0]) ? study.stats[0].value : '';
     var stat1Label = (study.stats && study.stats[0]) ? study.stats[0].label : '';
     var stat2Val   = (study.stats && study.stats[1]) ? study.stats[1].value : '';
@@ -266,8 +270,8 @@
         '<div class="framer-ubrkdy-container">' +
           '<div class="framer-EhvmC framer-Oe1cm framer-HhvlY framer-1v3z982 framer-v-1v3z982" data-framer-name="Variant 1" style="background-color:var(--token-ba7a9dfd-3e1d-4dea-a25f-9a0d49d43ddf,rgb(250,250,250));width:100%;border-radius:6px;opacity:1;">' +
             '<div class="framer-1wc3ts0" style="border-radius:6px;opacity:1;">' +
-              // Top logo area — left empty for MongoDB cards (no logo in schema)
-              '<div class="framer-1anxayh" style="opacity:1;"></div>' +
+              // Top logo area — renders study.logo when set
+              '<div class="framer-1anxayh" style="opacity:1;">' + logoImg + '</div>' +
               // Thumbnail image
               '<div class="framer-1ihf2qm" style="filter:grayscale(0);transform:none;opacity:1;">' +
                 '<div style="position:absolute;border-radius:inherit;top:0;right:0;bottom:0;left:0;" data-framer-background-image-wrapper="true">' +
@@ -283,8 +287,8 @@
             '</div>' +
             '<div class="framer-894e3e" style="opacity:1;">' +
               '<div class="framer-7x558y" style="opacity:1;">' +
-                // Bottom logo area — empty for MongoDB cards
-                '<div class="framer-jysi4e" style="opacity:1;"></div>' +
+                // Bottom logo area — renders study.logo when set
+                '<div class="framer-jysi4e" style="opacity:1;">' + logoImg + '</div>' +
                 // Subtitle / description
                 '<div class="framer-u3bmyl" data-framer-component-type="RichTextContainer" style="transform:none;opacity:1;">' +
                   '<p class="framer-text framer-styles-preset-1oy0gio" data-styles-preset="GWVxixWnJ" dir="auto">' + (study.subtitle || '') + '</p>' +

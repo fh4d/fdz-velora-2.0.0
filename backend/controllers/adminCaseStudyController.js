@@ -31,7 +31,7 @@ function normaliseRelated(raw) {
 async function adminListCaseStudies(req, res, next) {
   try {
     const studies = await CaseStudy.find()
-      .select('title slug status industry year order createdAt updatedAt')
+      .select('title slug status order createdAt updatedAt')
       .sort({ order: 1, createdAt: -1 });
 
     res.status(200).json({ success: true, count: studies.length, data: studies });
@@ -59,7 +59,7 @@ async function createCaseStudy(req, res, next) {
     const {
       title, slug, subtitle, industry, timeline, year,
       scopeOfWork, stats, challenge, strategy,
-      livePreviewUrl, heroImage, bodyImage,
+      livePreviewUrl, heroImage, bodyImage, logo,
       relatedProjects, seoTitle, seoDescription,
       status, order,
     } = req.body;
@@ -67,15 +67,7 @@ async function createCaseStudy(req, res, next) {
     // Required field guards
     if (!title?.trim())     return next(new AppError('Title is required', 400));
     if (!subtitle?.trim())  return next(new AppError('Subtitle is required', 400));
-    if (!industry?.trim())  return next(new AppError('Industry is required', 400));
-    if (!timeline?.trim())  return next(new AppError('Timeline is required', 400));
-    if (!year)              return next(new AppError('Year is required', 400));
-    if (!challenge?.trim()) return next(new AppError('Challenge is required', 400));
-    if (!strategy?.trim())  return next(new AppError('Strategy is required', 400));
 
-    if (!Array.isArray(scopeOfWork) || scopeOfWork.length < 1) {
-      return next(new AppError('At least one scope of work item is required', 400));
-    }
     if (!Array.isArray(stats) || stats.length !== 2) {
       return next(new AppError('Exactly 2 stats are required', 400));
     }
@@ -95,16 +87,17 @@ async function createCaseStudy(req, res, next) {
       title:           title.trim(),
       slug:            cleanSlug,
       subtitle:        subtitle.trim(),
-      industry:        industry.trim(),
-      timeline:        timeline.trim(),
-      year:            Number(year),
-      scopeOfWork:     scopeOfWork.map((s) => s.trim()).filter(Boolean),
+      industry:        industry?.trim()        || undefined,
+      timeline:        timeline?.trim()        || undefined,
+      year:            year !== undefined && year !== '' ? Number(year) : undefined,
+      scopeOfWork:     Array.isArray(scopeOfWork) ? scopeOfWork.map((s) => s.trim()).filter(Boolean) : [],
       stats:           stats.map((s) => ({ value: s.value.trim(), label: s.label.trim() })),
-      challenge:       challenge.trim(),
-      strategy:        strategy.trim(),
+      challenge:       challenge?.trim()       || undefined,
+      strategy:        strategy?.trim()        || undefined,
       livePreviewUrl:  livePreviewUrl?.trim()  || undefined,
       heroImage:       heroImage?.trim()       || undefined,
       bodyImage:       bodyImage?.trim()       || undefined,
+      logo:            logo?.trim()            || undefined,
       relatedProjects: normaliseRelated(relatedProjects),
       seoTitle:        seoTitle?.trim()        || undefined,
       seoDescription:  seoDescription?.trim()  || undefined,
@@ -132,7 +125,7 @@ async function updateCaseStudy(req, res, next) {
     const {
       title, subtitle, industry, timeline, year,
       scopeOfWork, stats, challenge, strategy,
-      livePreviewUrl, heroImage, bodyImage,
+      livePreviewUrl, heroImage, bodyImage, logo,
       relatedProjects, seoTitle, seoDescription,
       status, order,
     } = req.body;
@@ -148,23 +141,18 @@ async function updateCaseStudy(req, res, next) {
       }
     }
 
-    if (scopeOfWork !== undefined) {
-      if (!Array.isArray(scopeOfWork) || scopeOfWork.length < 1) {
-        return next(new AppError('At least one scope of work item is required', 400));
-      }
-    }
-
     const updates = {};
     if (title !== undefined)           updates.title           = title.trim();
     if (subtitle !== undefined)        updates.subtitle        = subtitle.trim();
-    if (industry !== undefined)        updates.industry        = industry.trim();
-    if (timeline !== undefined)        updates.timeline        = timeline.trim();
-    if (year !== undefined)            updates.year            = Number(year);
-    if (challenge !== undefined)       updates.challenge       = challenge.trim();
-    if (strategy !== undefined)        updates.strategy        = strategy.trim();
+    if (industry !== undefined)        updates.industry        = industry.trim()       || undefined;
+    if (timeline !== undefined)        updates.timeline        = timeline.trim()       || undefined;
+    if (year !== undefined)            updates.year            = year !== '' ? Number(year) : undefined;
+    if (challenge !== undefined)       updates.challenge       = challenge.trim()      || undefined;
+    if (strategy !== undefined)        updates.strategy        = strategy.trim()       || undefined;
     if (livePreviewUrl !== undefined)  updates.livePreviewUrl  = livePreviewUrl.trim()  || undefined;
     if (heroImage !== undefined)       updates.heroImage       = heroImage.trim()       || undefined;
     if (bodyImage !== undefined)       updates.bodyImage       = bodyImage.trim()       || undefined;
+    if (logo !== undefined)            updates.logo            = logo.trim()            || undefined;
     if (seoTitle !== undefined)        updates.seoTitle        = seoTitle.trim()        || undefined;
     if (seoDescription !== undefined)  updates.seoDescription  = seoDescription.trim()  || undefined;
     if (status !== undefined)          updates.status          = status;

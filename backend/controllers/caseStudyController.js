@@ -11,7 +11,7 @@ const CARD_PROJECTION = 'title slug subtitle stats heroImage order';
 async function getAllCaseStudies(req, res, next) {
   try {
     const studies = await CaseStudy.find({ status: 'published' })
-      .select('title slug subtitle industry year heroImage stats order createdAt')
+      .select('title slug subtitle industry year heroImage logo stats order createdAt')
       .sort({ order: 1, createdAt: -1 });
 
     res.status(200).json({ success: true, count: studies.length, data: studies });

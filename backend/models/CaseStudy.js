@@ -44,30 +44,30 @@ const caseStudySchema = new Schema(
       trim:     true,
     },
 
-    // Project metadata
+    // Project metadata — no longer collected via admin form (no detail page
+    // renders them), kept optional on the schema for older documents.
     industry: {
-      type:     String,
-      required: [true, 'Industry is required'],
-      trim:     true,
+      type: String,
+      trim: true,
     },
     timeline: {
-      type:     String,
-      required: [true, 'Timeline is required'],
-      trim:     true,
+      type: String,
+      trim: true,
     },
     year: {
-      type:     Number,
-      required: [true, 'Year is required'],
-      min:      [2000, 'Year must be 2000 or later'],
-      max:      [2100, 'Year must be 2100 or earlier'],
+      type: Number,
+      min: [2000, 'Year must be 2000 or later'],
+      max: [2100, 'Year must be 2100 or earlier'],
     },
     scopeOfWork: {
-      type:     [String],
-      required: [true, 'Scope of work is required'],
-      validate: {
-        validator: (v) => Array.isArray(v) && v.length >= 1,
-        message:   'At least one scope of work item is required',
-      },
+      type:    [String],
+      default: [],
+    },
+
+    // Client logo shown on the listing-page card (top + bottom logo slots)
+    logo: {
+      type: String,
+      trim: true,
     },
 
     // Statistics — exactly 2 for the current Nexlify template layout
@@ -80,16 +80,14 @@ const caseStudySchema = new Schema(
       },
     },
 
-    // Body content
+    // Body content — no longer collected via admin form, kept optional.
     challenge: {
-      type:     String,
-      required: [true, 'Challenge is required'],
-      trim:     true,
+      type: String,
+      trim: true,
     },
     strategy: {
-      type:     String,
-      required: [true, 'Strategy is required'],
-      trim:     true,
+      type: String,
+      trim: true,
     },
 
     // Images

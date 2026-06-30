@@ -344,32 +344,6 @@ tr:hover td { background: rgba(255,255,255,0.015); }
           <input type="text" id="cs-subtitle" placeholder="One-sentence description of the project">
         </div>
 
-        <div class="form-section-label">Project Details</div>
-        <div class="row-3">
-          <div class="field">
-            <label>Industry *</label>
-            <input type="text" id="cs-industry" placeholder="SaaS">
-          </div>
-          <div class="field">
-            <label>Timeline *</label>
-            <input type="text" id="cs-timeline" placeholder="10 Weeks">
-          </div>
-          <div class="field">
-            <label>Year *</label>
-            <input type="number" id="cs-year" placeholder="2024" min="2000" max="2100">
-          </div>
-        </div>
-        <div class="field">
-          <label>Scope of Work * <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">press Enter or comma to add a tag</span></label>
-          <div class="tag-input-wrapper" id="scope-wrapper">
-            <input class="tag-text-input" id="scope-text" placeholder="e.g. Paid Advertising">
-          </div>
-        </div>
-        <div class="field">
-          <label>Live Preview URL</label>
-          <input type="url" id="cs-live-url" placeholder="https://client-website.com">
-        </div>
-
         <div class="form-section-label">Results</div>
         <div class="row-2">
           <div class="field"><label>Stat 1 Value *</label><input type="text" id="cs-s1v" placeholder="+185%"></div>
@@ -378,23 +352,6 @@ tr:hover td { background: rgba(255,255,255,0.015); }
         <div class="row-2">
           <div class="field"><label>Stat 2 Value *</label><input type="text" id="cs-s2v" placeholder="+78%"></div>
           <div class="field"><label>Stat 2 Label *</label><input type="text" id="cs-s2l" placeholder="Demo Bookings"></div>
-        </div>
-        <div class="field">
-          <label>Challenge *</label>
-          <textarea id="cs-challenge" placeholder="Describe the client's main challenge…"></textarea>
-        </div>
-        <div class="field">
-          <label>Strategy *</label>
-          <textarea id="cs-strategy" placeholder="Describe the approach taken…"></textarea>
-        </div>
-
-        <div class="form-section-label">Related Projects</div>
-        <div class="field">
-          <label>Related Projects <span style="color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">press Enter or comma to add a slug</span></label>
-          <div class="tag-input-wrapper" id="related-wrapper">
-            <input class="tag-text-input" id="related-text" placeholder="e.g. velora-finance">
-          </div>
-          <div class="hint">Enter case study slugs. Leave empty to auto-fill from 2 other published case studies.</div>
         </div>
 
         <div class="form-section-label">Media &amp; SEO</div>
@@ -405,19 +362,14 @@ tr:hover td { background: rgba(255,255,255,0.015); }
             <div class="img-preview" id="cs-hero-preview"><img alt=""></div>
           </div>
           <div class="field">
-            <label>Body Image URL</label>
-            <input type="url" id="cs-body-img" placeholder="https://framerusercontent.com/...">
-            <div class="img-preview" id="cs-body-preview"><img alt=""></div>
+            <label>Client Logo URL</label>
+            <input type="url" id="cs-logo" placeholder="https://framerusercontent.com/...">
+            <div class="img-preview" id="cs-logo-preview"><img alt=""></div>
           </div>
         </div>
         <div class="row-2">
           <div class="field"><label>SEO Title</label><input type="text" id="cs-seo-title" placeholder="Overrides page title"></div>
           <div class="field"><label>SEO Description</label><input type="text" id="cs-seo-desc" placeholder="Overrides meta description"></div>
-        </div>
-        <div class="field" style="max-width:200px;">
-          <label>Display Order</label>
-          <input type="number" id="cs-order" placeholder="1" min="1">
-          <div class="hint">Lower = appears first in listings.</div>
         </div>
 
         <div class="form-actions">
@@ -495,49 +447,6 @@ tr:hover td { background: rgba(255,255,255,0.015); }
       img.onerror = function () { wrap.style.display = 'none'; };
     });
   }
-
-  // ── Tag chip input ────────────────────────────────────────────────────────────
-
-  function TagInput(wrapperId, textInputId) {
-    var wrapper = $(wrapperId);
-    var input   = $(textInputId);
-    var tags    = [];
-
-    function render() {
-      wrapper.querySelectorAll('.tag-chip').forEach(function (c) { c.remove(); });
-      tags.forEach(function (tag, i) {
-        var chip = document.createElement('span');
-        chip.className = 'tag-chip';
-        chip.innerHTML = esc(tag) + '<button type="button">×</button>';
-        chip.querySelector('button').addEventListener('click', function () {
-          tags.splice(i, 1); render();
-        });
-        wrapper.insertBefore(chip, input);
-      });
-    }
-
-    function add(val) {
-      var v = val.trim().replace(/,/g,'');
-      if (v && !tags.includes(v)) { tags.push(v); render(); }
-      input.value = '';
-    }
-
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(this.value); }
-      else if (e.key === 'Backspace' && !this.value && tags.length) { tags.pop(); render(); }
-    });
-    input.addEventListener('blur', function () { if (this.value.trim()) add(this.value); });
-    wrapper.addEventListener('click', function () { input.focus(); });
-
-    return {
-      set:   function (arr) { tags = arr.slice(); render(); },
-      get:   function ()    { return tags.slice(); },
-      clear: function ()    { tags = []; render(); },
-    };
-  }
-
-  var scopeTags   = TagInput('scope-wrapper',   'scope-text');
-  var relatedTags = TagInput('related-wrapper', 'related-text');
 
   // ── Sidebar navigation ────────────────────────────────────────────────────────
 
@@ -727,18 +636,16 @@ tr:hover td { background: rgba(255,255,255,0.015); }
     if (!$('cs-editing-slug').value) $('cs-slug').value = slugify(this.value);
   });
   bindImgPreview('cs-hero-img', 'cs-hero-preview');
-  bindImgPreview('cs-body-img', 'cs-body-preview');
+  bindImgPreview('cs-logo', 'cs-logo-preview');
 
   function clearCsForm(){
-    ['cs-title','cs-slug','cs-subtitle','cs-industry','cs-timeline','cs-year',
-     'cs-live-url','cs-s1v','cs-s1l','cs-s2v','cs-s2l','cs-challenge','cs-strategy',
-     'cs-hero-img','cs-body-img','cs-seo-title','cs-seo-desc','cs-order'].forEach(function(id){ $(id).value=''; });
-    scopeTags.clear();
-    relatedTags.clear();
+    ['cs-title','cs-slug','cs-subtitle',
+     'cs-s1v','cs-s1l','cs-s2v','cs-s2l',
+     'cs-hero-img','cs-logo','cs-seo-title','cs-seo-desc'].forEach(function(id){ $(id).value=''; });
     $('cs-editing-slug').value='';
     $('cs-editing-id').value='';
     $('cs-hero-preview').style.display='none';
-    $('cs-body-preview').style.display='none';
+    $('cs-logo-preview').style.display='none';
     $('cs-form-heading').textContent = 'New Case Study';
     $('cs-publish-btn').textContent = 'Publish';
     $('cs-draft-btn').textContent   = 'Save as Draft';
@@ -751,43 +658,27 @@ tr:hover td { background: rgba(255,255,255,0.015); }
   function submitCs(status){
     var editingSlug = $('cs-editing-slug').value;
     var editingId   = $('cs-editing-id').value;
-    var scope       = scopeTags.get();
-    var related     = relatedTags.get().map(function(s){ return { slug: s }; });
     var payload = {
       title:           $('cs-title').value.trim(),
       slug:            $('cs-slug').value.trim(),
       subtitle:        $('cs-subtitle').value.trim(),
-      industry:        $('cs-industry').value.trim(),
-      timeline:        $('cs-timeline').value.trim(),
-      year:            parseInt($('cs-year').value, 10) || undefined,
-      scopeOfWork:     scope,
-      livePreviewUrl:  $('cs-live-url').value.trim()   || undefined,
       stats: [
         { value: $('cs-s1v').value.trim(), label: $('cs-s1l').value.trim() },
         { value: $('cs-s2v').value.trim(), label: $('cs-s2l').value.trim() },
       ],
-      challenge:       $('cs-challenge').value.trim(),
-      strategy:        $('cs-strategy').value.trim(),
       heroImage:       $('cs-hero-img').value.trim()   || undefined,
-      bodyImage:       $('cs-body-img').value.trim()   || undefined,
-      relatedProjects: related,
+      logo:            $('cs-logo').value.trim()       || undefined,
       seoTitle:        $('cs-seo-title').value.trim()  || undefined,
       seoDescription:  $('cs-seo-desc').value.trim()   || undefined,
-      order:           $('cs-order').value ? parseInt($('cs-order').value, 10) : undefined,
       status:          status,
     };
 
     if (!payload.title)           { showMsg('cs-msg','Title is required','error'); return; }
     if (!payload.subtitle)        { showMsg('cs-msg','Subtitle is required','error'); return; }
-    if (!payload.industry)        { showMsg('cs-msg','Industry is required','error'); return; }
-    if (!payload.year)            { showMsg('cs-msg','Year is required','error'); return; }
-    if (!scope.length)            { showMsg('cs-msg','Add at least one Scope of Work item','error'); return; }
     if (!payload.stats[0].value || !payload.stats[0].label ||
         !payload.stats[1].value || !payload.stats[1].label) {
       showMsg('cs-msg','Both stats need a value and a label','error'); return;
     }
-    if (!payload.challenge)       { showMsg('cs-msg','Challenge is required','error'); return; }
-    if (!payload.strategy)        { showMsg('cs-msg','Strategy is required','error'); return; }
 
     var btn = status==='published' ? $('cs-publish-btn') : $('cs-draft-btn');
     btn.disabled=true;
@@ -827,8 +718,7 @@ tr:hover td { background: rgba(255,255,255,0.015); }
       var id   = esc(cs._id);
       return '<tr>'+
         '<td class="cell-title">'+esc(cs.title)+'</td>'+
-        '<td class="cell-meta">'+esc(cs.industry||'—')+'</td>'+
-        '<td class="cell-meta">'+esc(cs.year||'—')+'</td>'+
+        '<td class="cell-meta">'+fmtDate(cs.createdAt)+'</td>'+
         '<td>'+badgeStatus(cs.status)+'</td>'+
         '<td class="td-actions">'+
           '<button class="btn btn-secondary btn-sm" onclick="editCs(\''+slug+'\')">Edit</button>'+
@@ -837,7 +727,7 @@ tr:hover td { background: rgba(255,255,255,0.015); }
         '</td>'+
       '</tr>';
     }).join('');
-    $('cs-table').innerHTML='<table><thead><tr><th>Title</th><th>Industry</th><th>Year</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    $('cs-table').innerHTML='<table><thead><tr><th>Title</th><th>Created</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
   window.editCs = function(slug){
@@ -849,29 +739,19 @@ tr:hover td { background: rgba(255,255,255,0.015); }
         $('cs-title').value    = s.title    || '';
         $('cs-slug').value     = s.slug     || '';
         $('cs-subtitle').value = s.subtitle || '';
-        $('cs-industry').value = s.industry || '';
-        $('cs-timeline').value = s.timeline || '';
-        $('cs-year').value     = s.year     || '';
-        $('cs-live-url').value = s.livePreviewUrl || '';
-        scopeTags.set(s.scopeOfWork || []);
-        // Populate related projects tag chip from [{slug}] array
-        relatedTags.set((s.relatedProjects || []).map(function(r){ return r.slug; }));
         if (s.stats && s.stats[0]){ $('cs-s1v').value=s.stats[0].value||''; $('cs-s1l').value=s.stats[0].label||''; }
         if (s.stats && s.stats[1]){ $('cs-s2v').value=s.stats[1].value||''; $('cs-s2l').value=s.stats[1].label||''; }
-        $('cs-challenge').value  = s.challenge      || '';
-        $('cs-strategy').value   = s.strategy       || '';
         $('cs-hero-img').value   = s.heroImage      || '';
-        $('cs-body-img').value   = s.bodyImage      || '';
+        $('cs-logo').value       = s.logo           || '';
         $('cs-seo-title').value  = s.seoTitle       || '';
         $('cs-seo-desc').value   = s.seoDescription || '';
-        $('cs-order').value      = s.order != null  ? s.order : '';
         $('cs-editing-slug').value = s.slug;
         $('cs-editing-id').value   = s._id;
         $('cs-form-heading').textContent = 'Edit — '+s.title;
         $('cs-publish-btn').textContent = 'Update & Publish';
         $('cs-draft-btn').textContent   = 'Update as Draft';
         if (s.heroImage){ var hp=$('cs-hero-preview'); hp.querySelector('img').src=s.heroImage; hp.style.display='block'; }
-        if (s.bodyImage){ var bp=$('cs-body-preview');  bp.querySelector('img').src=s.bodyImage;  bp.style.display='block'; }
+        if (s.logo){ var lp=$('cs-logo-preview'); lp.querySelector('img').src=s.logo; lp.style.display='block'; }
         showPanel('cs-form-panel');
       });
   };
