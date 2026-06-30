@@ -227,17 +227,17 @@
     s.id = 'fdz-cs-styles';
     s.textContent = [
       // Entrance animation — matches Framer's spring (cubic-bezier(0.22,1,0.36,1))
-      '@keyframes fdzCsFadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}',
-      '.fdz-cs-card{animation:fdzCsFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both}',
+      '@keyframes fdzCsFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}',
+      '.fdz-cs-card{animation:fdzCsFadeUp 0.35s ease-out both}',
       // Stagger delays for up to 8 cards
       '.fdz-cs-card:nth-child(1){animation-delay:0.00s}',
-      '.fdz-cs-card:nth-child(2){animation-delay:0.08s}',
-      '.fdz-cs-card:nth-child(3){animation-delay:0.16s}',
-      '.fdz-cs-card:nth-child(4){animation-delay:0.24s}',
-      '.fdz-cs-card:nth-child(5){animation-delay:0.32s}',
-      '.fdz-cs-card:nth-child(6){animation-delay:0.40s}',
-      '.fdz-cs-card:nth-child(7){animation-delay:0.48s}',
-      '.fdz-cs-card:nth-child(8){animation-delay:0.56s}',
+      '.fdz-cs-card:nth-child(2){animation-delay:0.05s}',
+      '.fdz-cs-card:nth-child(3){animation-delay:0.10s}',
+      '.fdz-cs-card:nth-child(4){animation-delay:0.15s}',
+      '.fdz-cs-card:nth-child(5){animation-delay:0.20s}',
+      '.fdz-cs-card:nth-child(6){animation-delay:0.25s}',
+      '.fdz-cs-card:nth-child(7){animation-delay:0.30s}',
+      '.fdz-cs-card:nth-child(8){animation-delay:0.35s}',
       // Shimmer on empty grid container (shows while fetch is in flight)
       '@keyframes fdzShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}',
       '.fdz-cs-loading{min-height:480px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:fdzShimmer 1.4s ease infinite;border-radius:8px}',
@@ -369,29 +369,6 @@
         result.data.forEach(function (study) {
           container.appendChild(buildCaseStudyCard(study));
         });
-
-        // GSAP ScrollTrigger — replaces CSS stagger animation with scroll-driven reveals.
-        // Only activates if GSAP loaded (case-studies page); CSS animation is the fallback.
-        if (window.gsap && window.ScrollTrigger) {
-          window.gsap.registerPlugin(window.ScrollTrigger);
-          container.querySelectorAll('.fdz-cs-card').forEach(function (card) {
-            card.style.animation = 'none';
-            window.gsap.fromTo(card,
-              { opacity: 0, y: 24 },
-              {
-                opacity: 1,
-                y: 0,
-                duration: 0.65,
-                ease: 'power3.out',
-                scrollTrigger: {
-                  trigger: card,
-                  start: 'top 88%',
-                  toggleActions: 'play none none none',
-                },
-              }
-            );
-          });
-        }
 
         log('Injected ' + result.data.length + ' MongoDB case study card(s)');
       })
