@@ -336,6 +336,12 @@
     var container = document.querySelector('.framer-m0p3pe');
     if (!container) return;
 
+    // Hide any cards already present (stale cached HTML, prior SPA nav, etc.)
+    // so they can't flash on screen before the fresh MongoDB data lands.
+    // Restored on fetch failure so a backend hiccup doesn't leave a blank grid.
+    var staleCards = container.querySelectorAll('.framer-c52rlm');
+    staleCards.forEach(function (el) { el.style.visibility = 'hidden'; });
+
     // Show shimmer while fetch is in flight (Risk 2 fix)
     container.classList.add('fdz-cs-loading');
 
@@ -367,6 +373,9 @@
       })
       .catch(function () {
         container.classList.remove('fdz-cs-loading');
+        // Fetch failed — reveal whatever was already there rather than
+        // leaving the grid blank.
+        staleCards.forEach(function (el) { el.style.visibility = ''; });
         log('Case studies fetch failed — skipping injection');
       });
   }
