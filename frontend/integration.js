@@ -369,6 +369,30 @@
         result.data.forEach(function (study) {
           container.appendChild(buildCaseStudyCard(study));
         });
+
+        // GSAP ScrollTrigger — replaces CSS stagger animation with scroll-driven reveals.
+        // Only activates if GSAP loaded (case-studies page); CSS animation is the fallback.
+        if (window.gsap && window.ScrollTrigger) {
+          window.gsap.registerPlugin(window.ScrollTrigger);
+          container.querySelectorAll('.fdz-cs-card').forEach(function (card) {
+            card.style.animation = 'none';
+            window.gsap.fromTo(card,
+              { opacity: 0, y: 24 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.65,
+                ease: 'power3.out',
+                scrollTrigger: {
+                  trigger: card,
+                  start: 'top 88%',
+                  toggleActions: 'play none none none',
+                },
+              }
+            );
+          });
+        }
+
         log('Injected ' + result.data.length + ' MongoDB case study card(s)');
       })
       .catch(function () {
