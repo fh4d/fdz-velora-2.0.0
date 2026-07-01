@@ -410,9 +410,11 @@
             return;
           }
 
-          // Static Framer per-project detail pages don't correspond to real
-          // MongoDB case studies — send clicks to the live listing instead.
-          card.href = '/case-studies';
+          // Href left untouched — Framer's SPA router uses its own hydrated
+          // route data, not the live DOM href, so mutating it here has no
+          // effect on navigation. The click interceptor below (matching the
+          // original ./case-studies/:slug href) handles redirecting to the
+          // live /case-studies listing instead.
 
           var topLogo    = card.querySelector('.framer-1anxayh img');
           var heroImg    = card.querySelector('.framer-1ihf2qm img');
@@ -512,21 +514,25 @@
 
   homeObserver.observe(document.body, { childList: true, subtree: true });
 
-  // Case study card clicks → hard-navigate to /book-a-call.
+  // Case study card clicks → hard-navigate, bypassing Framer's SPA router.
   // Uses window.location.href (not router push) to bypass Framer's SPA router
   // entirely, preventing blank-page from React/Framer intercepting internal links.
-  // Covers both: original Framer cards (href=./case-studies/slug) and MongoDB
-  // cards (href=/book-a-call that Framer's router might try to handle).
+  // Two distinct cases:
+  //  - Static Framer per-project links (./case-studies/:slug) don't correspond
+  //    to real MongoDB case studies — send to the live /case-studies listing.
+  //  - MongoDB-built cards on /case-studies itself (href=/book-a-call) already
+  //    point at the right place; still hard-navigated since Framer's delegated
+  //    click handler can mishandle anchors it didn't hydrate.
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a[href]');
     if (!a) return;
     try {
       var url = new URL(a.href);
-      // Any click on /case-studies/:slug or /book-a-call from a case study card
-      if (
-        (url.pathname.startsWith('/case-studies/') && url.pathname !== '/case-studies') ||
-        (url.pathname === '/book-a-call' && a.classList.contains('fdz-cs-card'))
-      ) {
+      if (url.pathname.startsWith('/case-studies/') && url.pathname !== '/case-studies') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        window.location.href = '/case-studies';
+      } else if (url.pathname === '/book-a-call' && a.classList.contains('fdz-cs-card')) {
         e.preventDefault();
         e.stopImmediatePropagation();
         window.location.href = '/book-a-call';
