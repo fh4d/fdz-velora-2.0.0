@@ -410,6 +410,10 @@
             return;
           }
 
+          // Static Framer per-project detail pages don't correspond to real
+          // MongoDB case studies — send clicks to the live listing instead.
+          card.href = '/case-studies';
+
           var topLogo    = card.querySelector('.framer-1anxayh img');
           var heroImg    = card.querySelector('.framer-1ihf2qm img');
           var bottomLogo = card.querySelector('.framer-jysi4e img');
