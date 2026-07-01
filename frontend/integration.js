@@ -280,7 +280,7 @@
                 // Grain overlay — matches original exactly
                 '<div class="framer-1fy171d-container" style="opacity:1;"><!--$-->' +
                   '<div style="width:100%;height:100%;position:relative;overflow:hidden">' +
-                    '<div style="background:url(\'assets/images/variant-1-63.png\');background-size:50px 50px;background-repeat:repeat;position:absolute;inset:-200%;width:400%;height:400%;opacity:0.17"></div>' +
+                    '<div style="background:url(\'assets/images/variant-1-63.webp\');background-size:50px 50px;background-repeat:repeat;position:absolute;inset:-200%;width:400%;height:400%;opacity:0.17"></div>' +
                   '</div>' +
                 '<!--/$--></div>' +
               '</div>' +
