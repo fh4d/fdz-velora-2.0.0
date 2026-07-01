@@ -410,11 +410,14 @@
             return;
           }
 
-          // Href left untouched — Framer's SPA router uses its own hydrated
-          // route data, not the live DOM href, so mutating it here has no
-          // effect on navigation. The click interceptor below (matching the
-          // original ./case-studies/:slug href) handles redirecting to the
-          // live /case-studies listing instead.
+          // Framer's SPA router ignores the live DOM href at click time — it
+          // uses route data cached at hydration — so the click interceptor
+          // below can't rely on pattern-matching the href for these cards.
+          // Instead: set a marker attribute the interceptor checks directly,
+          // then it's safe to also update the visible href so hover/status
+          // bar shows the real destination instead of the stale slug.
+          card.setAttribute('data-fdz-redirect', '/case-studies');
+          card.href = '/case-studies';
 
           var topLogo    = card.querySelector('.framer-1anxayh img');
           var heroImg    = card.querySelector('.framer-1ihf2qm img');
@@ -517,15 +520,27 @@
   // Case study card clicks → hard-navigate, bypassing Framer's SPA router.
   // Uses window.location.href (not router push) to bypass Framer's SPA router
   // entirely, preventing blank-page from React/Framer intercepting internal links.
-  // Two distinct cases:
-  //  - Static Framer per-project links (./case-studies/:slug) don't correspond
-  //    to real MongoDB case studies — send to the live /case-studies listing.
+  // Three distinct cases:
+  //  - Homepage cards carry data-fdz-redirect (set in patchHomepageCaseStudies)
+  //    since Framer's router ignores the live href at click time — the marker
+  //    is checked directly rather than relying on href pattern-matching.
+  //  - Any remaining static Framer per-project links (./case-studies/:slug)
+  //    don't correspond to real MongoDB case studies — send to the listing.
   //  - MongoDB-built cards on /case-studies itself (href=/book-a-call) already
   //    point at the right place; still hard-navigated since Framer's delegated
   //    click handler can mishandle anchors it didn't hydrate.
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a[href]');
     if (!a) return;
+
+    var redirect = a.getAttribute('data-fdz-redirect');
+    if (redirect) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.location.href = redirect;
+      return;
+    }
+
     try {
       var url = new URL(a.href);
       if (url.pathname.startsWith('/case-studies/') && url.pathname !== '/case-studies') {
