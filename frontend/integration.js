@@ -381,6 +381,133 @@
       });
   }
 
+  // ─── Homepage: patch static Framer preview cards with MongoDB data ───────────
+  // Homepage case-study/blog cards are NOT rebuilt like the /case-studies and
+  // /blog listing pages — we never re-export from Framer, so the DOM structure
+  // is permanently frozen. Instead we patch the existing Framer nodes in place
+  // (image src, text content) and leave everything else — layout, hover CSS,
+  // entrance animation — untouched. Hrefs to /case-studies/:slug are already
+  // hard-navigated to /book-a-call by the click interceptor below, so no href
+  // changes are needed for case study cards.
+
+  function patchHomepageCaseStudies() {
+    var container = document.querySelector('.framer-khu8cz');
+    if (!container) return;
+    if (container.getAttribute('data-fdz-patched') === 'true') return;
+
+    fetch(API_BASE + '/case-studies')
+      .then(function (res) { return res.json(); })
+      .then(function (result) {
+        if (!result.success || !result.data || result.data.length === 0) return;
+
+        var cards = container.querySelectorAll('a.framer-lux5qc');
+        container.setAttribute('data-fdz-patched', 'true');
+
+        cards.forEach(function (card, i) {
+          var study = result.data[i];
+          if (!study) {
+            card.style.display = 'none';
+            return;
+          }
+
+          var topLogo    = card.querySelector('.framer-1anxayh img');
+          var heroImg    = card.querySelector('.framer-1ihf2qm img');
+          var bottomLogo = card.querySelector('.framer-jysi4e img');
+          var subtitle   = card.querySelector('.framer-u3bmyl p');
+          var stat1Val   = card.querySelector('.framer-jvp2kh p');
+          var stat1Label = card.querySelector('.framer-28ay0p p');
+          var stat2Val   = card.querySelector('.framer-1h2c6bg p');
+          var stat2Label = card.querySelector('.framer-1ymqgaw p');
+
+          [topLogo, bottomLogo].forEach(function (logo) {
+            if (!logo) return;
+            if (study.logo) {
+              logo.src = study.logo;
+              logo.style.display = '';
+            } else {
+              logo.style.display = 'none';
+            }
+          });
+
+          if (heroImg && study.heroImage) {
+            heroImg.removeAttribute('srcset');
+            heroImg.removeAttribute('sizes');
+            heroImg.src = study.heroImage;
+            heroImg.alt = study.title || '';
+          }
+
+          if (subtitle) subtitle.textContent = study.subtitle || '';
+
+          if (study.stats && study.stats[0]) {
+            if (stat1Val)   stat1Val.textContent   = study.stats[0].value || '';
+            if (stat1Label) stat1Label.textContent = study.stats[0].label || '';
+          }
+          if (study.stats && study.stats[1]) {
+            if (stat2Val)   stat2Val.textContent   = study.stats[1].value || '';
+            if (stat2Label) stat2Label.textContent = study.stats[1].label || '';
+          }
+        });
+
+        log('Patched ' + Math.min(cards.length, result.data.length) + ' homepage case study card(s)');
+      })
+      .catch(function () {
+        log('Homepage case studies fetch failed — leaving static cards as-is');
+      });
+  }
+
+  function patchHomepageBlogPosts() {
+    var container = document.querySelector('.framer-8cdppq');
+    if (!container) return;
+    if (container.getAttribute('data-fdz-patched') === 'true') return;
+
+    fetch(API_BASE + '/blog')
+      .then(function (res) { return res.json(); })
+      .then(function (result) {
+        if (!result.success || !result.data || result.data.length === 0) return;
+
+        var cards = container.querySelectorAll('a.framer-lux5qc');
+        container.setAttribute('data-fdz-patched', 'true');
+
+        cards.forEach(function (card, i) {
+          var post = result.data[i];
+          if (!post) {
+            card.style.display = 'none';
+            return;
+          }
+
+          var img   = card.querySelector('.framer-zatllq img');
+          var date  = card.querySelector('.framer-hvf49r p');
+          var title = card.querySelector('.framer-sssdg2 p');
+
+          if (img && post.coverImage) {
+            img.removeAttribute('srcset');
+            img.removeAttribute('sizes');
+            img.src = post.coverImage;
+            img.alt = post.title || '';
+          }
+          if (date)  date.textContent  = formatDate(post.createdAt);
+          if (title) title.textContent = post.title || '';
+
+          card.href = '/blog/' + post.slug;
+        });
+
+        log('Patched ' + Math.min(cards.length, result.data.length) + ' homepage blog card(s)');
+      })
+      .catch(function () {
+        log('Homepage blog fetch failed — leaving static cards as-is');
+      });
+  }
+
+  // Watch for homepage content to settle after Framer's hydration mutations
+  var homeObserver = new MutationObserver(function () {
+    var pathname = window.location.pathname.replace(/\/$/, '') || '/';
+    if (pathname !== '/') return;
+    patchHomepageCaseStudies();
+    patchHomepageBlogPosts();
+  });
+
+  homeObserver.observe(document.body, { childList: true, subtree: true });
+
   // Case study card clicks → hard-navigate to /book-a-call.
   // Uses window.location.href (not router push) to bypass Framer's SPA router
   // entirely, preventing blank-page from React/Framer intercepting internal links.
