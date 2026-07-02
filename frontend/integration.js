@@ -16,6 +16,25 @@
     if (IS_DEV) console.log('[FDZ]', msg);
   }
 
+  // ─── Title guard: rebrand safety net ─────────────────────────────────────────
+  // Framer's SPA router regenerates document.title from shared-lib.BSbSoVGN.mjs,
+  // which is immutable-cached in browsers that visited before the rebrand and
+  // couldn't be renamed (22 cached bundles import it by name). Rewrite the old
+  // brand whenever it reappears. The check-before-set guard prevents the
+  // observer from re-triggering itself.
+  var titleObserver = new MutationObserver(function () {
+    if (document.title.indexOf('Velora') !== -1) {
+      document.title = document.title.replace(/Velora/g, 'Veue');
+    }
+  });
+  var titleEl = document.querySelector('title');
+  if (titleEl) {
+    titleObserver.observe(titleEl, { childList: true, characterData: true, subtree: true });
+  }
+  if (document.title.indexOf('Velora') !== -1) {
+    document.title = document.title.replace(/Velora/g, 'Veue');
+  }
+
   // ─── Inline status message ────────────────────────────────────────────────────
 
   function showMessage(form, text, isError) {
